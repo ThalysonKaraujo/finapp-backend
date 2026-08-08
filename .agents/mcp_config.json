@@ -2,6 +2,10 @@
   "mcpServers": {
     "better-auth": {
       "url": "https://mcp.better-auth.com/mcp"
+    },
+    "drizzle": {
+      "command": "npx",
+      "args": ["-y", "github:defrex/drizzle-mcp", "./drizzle.config.ts"]
     }
   }
 }
