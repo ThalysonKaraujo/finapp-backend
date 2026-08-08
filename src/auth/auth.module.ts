@@ -1,0 +1,12 @@
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { DatabaseModule } from '../database/database.module';
+import { AuthMiddleware } from './auth.middleware';
+
+@Module({
+  imports: [DatabaseModule],
+})
+export class AuthModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AuthMiddleware).forRoutes('/api/auth/*');
+  }
+}
