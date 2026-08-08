@@ -1,7 +1,7 @@
-import { Injectable, NestMiddleware } from '@nestjs/common';
-import { NextFunction, Request, Response } from 'express';
-import { auth } from './auth';
+import { Injectable, type NestMiddleware } from '@nestjs/common';
 import { toNodeHandler } from 'better-auth/node';
+import type { NextFunction, Request, Response } from 'express';
+import { auth } from './auth';
 
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {

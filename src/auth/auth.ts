@@ -1,7 +1,7 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
 
 // Connection specifically for Better Auth to generate schemas
 const client = postgres(process.env.DATABASE_URL || '');
