@@ -25,4 +25,25 @@ export const auth = betterAuth({
     enabled: true,
   },
   trustedOrigins: ['http://localhost:3000', 'exp://*', 'app://*'],
+  rateLimit: {
+    enabled: true,
+    window: 10, // 10 seconds global window
+    max: 100, // 100 requests per 10s globally
+    customRules: {
+      '/api/auth/sign-in/email': {
+        window: 60,
+        max: 5, // 5 attempts per minute for sign in
+      },
+      '/api/auth/sign-up/email': {
+        window: 60,
+        max: 3, // 3 attempts per minute for sign up
+      },
+    },
+  },
+  advanced: {
+    ipAddress: {
+      ipAddressHeaders: ['x-forwarded-for', 'x-real-ip'],
+      disableIpTracking: false,
+    },
+  },
 });
