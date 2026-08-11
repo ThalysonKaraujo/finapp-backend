@@ -8,23 +8,25 @@ describe('TransactionsService', () => {
 
   let mockQueryResult: any = [];
 
-  const mockDb = {
-    insert: vi.fn().mockReturnThis(),
-    values: vi.fn().mockReturnThis(),
-    returning: vi.fn().mockImplementation(() => Promise.resolve(mockQueryResult)),
-    select: vi.fn().mockReturnThis(),
+  const mockChain = {
     from: vi.fn().mockReturnThis(),
     where: vi.fn().mockReturnThis(),
     orderBy: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
     offset: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
+    values: vi.fn().mockReturnThis(),
     set: vi.fn().mockReturnThis(),
-    delete: vi.fn().mockReturnThis(),
-    execute: vi.fn(),
+    returning: vi.fn().mockImplementation(() => Promise.resolve(mockQueryResult)),
     then: function (resolve: any) {
       resolve(mockQueryResult);
     },
+  };
+
+  const mockDb = {
+    insert: vi.fn().mockReturnValue(mockChain),
+    select: vi.fn().mockReturnValue(mockChain),
+    update: vi.fn().mockReturnValue(mockChain),
+    delete: vi.fn().mockReturnValue(mockChain),
   };
 
   beforeEach(async () => {
@@ -93,7 +95,7 @@ describe('TransactionsService', () => {
       const result = await service.create(dto as any);
 
       expect(mockDb.insert).toHaveBeenCalled();
-      expect(mockDb.values).toHaveBeenCalled();
+      expect(mockChain.values).toHaveBeenCalled();
       expect(result).toEqual(expectedResponse);
     });
   });
