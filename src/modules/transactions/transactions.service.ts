@@ -6,7 +6,7 @@ import { transactions } from './transactions.schema';
 @Injectable()
 export class TransactionsService {
   constructor(
-    @Inject('DATABASE_CONNECTION')
+    @Inject('PG_CONNECTION')
     private readonly db: any, // TBD: proper drizzle type
   ) {}
 

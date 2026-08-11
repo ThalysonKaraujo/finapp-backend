@@ -21,7 +21,7 @@ describe('TransactionsService', () => {
       providers: [
         TransactionsService,
         {
-          provide: 'DATABASE_CONNECTION',
+          provide: 'PG_CONNECTION',
           useValue: mockDb,
         },
       ],
