@@ -1,7 +1,11 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { CreateTransactionDto } from './dto/create-transaction.dto';
-
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { and, desc, eq } from 'drizzle-orm';
+import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { transactions } from './transactions.schema';
 
@@ -51,7 +55,7 @@ export class TransactionsService {
       .where(and(eq(transactions.id, id), eq(transactions.userId, userId)));
 
     if (!transaction) {
-      throw new BadRequestException('Transaction not found or unauthorized');
+      throw new NotFoundException('Transaction not found or unauthorized');
     }
 
     return transaction;
@@ -60,7 +64,7 @@ export class TransactionsService {
   async update(id: string, userId: string, dto: UpdateTransactionDto) {
     await this.findOne(id, userId); // Ensure it exists and belongs to user
 
-    const updateData: any = { ...dto };
+    const updateData: Record<string, unknown> = { ...dto };
     if (dto.date) {
       updateData.date = new Date(dto.date);
     }
