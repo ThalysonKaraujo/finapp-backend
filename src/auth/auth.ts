@@ -6,7 +6,6 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './auth.schema';
 
-// Connection specifically for Better Auth to generate schemas
 const client = postgres(process.env.DATABASE_URL || '');
 const db = drizzle(client, { schema });
 
@@ -15,9 +14,7 @@ export const auth = betterAuth({
     provider: 'pg',
     schema,
   }),
-  plugins: [
-    bearer(),
-  ],
+  plugins: [bearer()],
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID || '',

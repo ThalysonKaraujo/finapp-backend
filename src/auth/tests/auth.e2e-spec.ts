@@ -48,7 +48,7 @@ describe('AuthModule (e2e)', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('user');
-    expect(response.body.session).toHaveProperty('token');
+    expect(response.body).toHaveProperty('token');
     expect(response.body.user.email).toBe(randomEmail);
   });
 
@@ -60,7 +60,8 @@ describe('AuthModule (e2e)', () => {
         password: 'wrong-password',
       });
 
-    // 401 Unauthorized ou erro customizado do Better Auth (403/400)
     expect([401, 403, 400]).toContain(response.status);
+    expect(response.body.message).toEqual('Invalid email or password');
+    expect(response.body.code).toEqual('INVALID_EMAIL_OR_PASSWORD');
   });
 });
