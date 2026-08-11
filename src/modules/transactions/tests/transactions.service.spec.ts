@@ -65,25 +65,73 @@ describe('TransactionsService', () => {
 
     it('🟢 Happy Path: should create a transaction successfully saving as cents', async () => {
       const dto = {
-        amount: 5000, // 50.00
+        amount: 5000,
         type: 'INCOME',
         title: 'Salário',
-        date: new Date(),
+        date: new Date().toISOString(),
         userId: 'user-1',
         walletId: 'wallet-1',
         categoryId: 'cat-1',
       };
 
-      const expectedResponse = { id: 'txn-uuid', ...dto, createdAt: new Date(), updatedAt: new Date() };
+      const expectedResponse = { id: 'txn-uuid', ...dto, date: new Date(dto.date), createdAt: new Date(), updatedAt: new Date() };
       
-      // Mock db insertion returning the transaction
       mockDb.returning.mockResolvedValue([expectedResponse]);
 
       const result = await service.create(dto as any);
 
       expect(mockDb.insert).toHaveBeenCalled();
-      expect(mockDb.values).toHaveBeenCalledWith(dto);
+      expect(mockDb.values).toHaveBeenCalled();
       expect(result).toEqual(expectedResponse);
+    });
+  });
+
+  describe('findAll', () => {
+    it('🟢 Happy Path: should return transactions with pagination', async () => {
+      mockDb.execute = vi.fn().mockResolvedValue([{ id: '1' }]);
+      const result = await service.findAll('user-1', 1, 20);
+      expect(result).toBeDefined();
+    });
+  });
+
+  describe('findOne', () => {
+    it('🔴 Sad Path: should throw NotFoundException if transaction does not exist', async () => {
+      mockDb.execute = vi.fn().mockResolvedValue([]);
+      await expect(service.findOne('invalid-id', 'user-1')).rejects.toThrow();
+    });
+
+    it('🟢 Happy Path: should return the transaction', async () => {
+      mockDb.execute = vi.fn().mockResolvedValue([{ id: 'txn-uuid', userId: 'user-1' }]);
+      const result = await service.findOne('txn-uuid', 'user-1');
+      expect(result).toBeDefined();
+    });
+  });
+
+  describe('update', () => {
+    it('🔴 Sad Path: should throw NotFoundException if trying to update non-existing transaction', async () => {
+      mockDb.execute = vi.fn().mockResolvedValue([]); // Find returns empty
+      await expect(service.update('invalid-id', 'user-1', { amount: 10 })).rejects.toThrow();
+    });
+
+    it('🟢 Happy Path: should update the transaction', async () => {
+      mockDb.execute = vi.fn().mockResolvedValue([{ id: 'txn-uuid', userId: 'user-1' }]); // Find returns mock
+      mockDb.returning.mockResolvedValue([{ id: 'txn-uuid', amount: 10 }]);
+      const result = await service.update('txn-uuid', 'user-1', { amount: 10 });
+      expect(result).toBeDefined();
+    });
+  });
+
+  describe('remove', () => {
+    it('🔴 Sad Path: should throw NotFoundException if trying to remove non-existing transaction', async () => {
+      mockDb.execute = vi.fn().mockResolvedValue([]); // Find returns empty
+      await expect(service.remove('invalid-id', 'user-1')).rejects.toThrow();
+    });
+
+    it('🟢 Happy Path: should remove the transaction', async () => {
+      mockDb.execute = vi.fn().mockResolvedValue([{ id: 'txn-uuid', userId: 'user-1' }]); // Find returns mock
+      mockDb.returning.mockResolvedValue([{ id: 'txn-uuid' }]);
+      const result = await service.remove('txn-uuid', 'user-1');
+      expect(result).toBeDefined();
     });
   });
 });

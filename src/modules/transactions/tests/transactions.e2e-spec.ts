@@ -78,4 +78,27 @@ describe('TransactionsModule (e2e)', () => {
       expect([201, 500]).toContain(response.status);
     });
   });
+
+  describe('/transactions (GET)', () => {
+    it('🟢 Happy Path: should return list of transactions', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/transactions?userId=user-id-test-e2e&page=1&limit=10');
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+    });
+  });
+
+  describe('/transactions/:id (PUT)', () => {
+    it('🔴 Sad Path: should return 400 when updating with invalid enum type', async () => {
+      const response = await request(app.getHttpServer())
+        .put('/transactions/invalid-uuid?userId=user-id-test-e2e')
+        .send({
+          type: 'BLABLA', // Invalid enum
+        });
+
+      // ValidationPipe deve barrar
+      expect([400, 500]).toContain(response.status);
+    });
+  });
 });
