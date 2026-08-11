@@ -16,7 +16,9 @@ describe('TransactionsService', () => {
     offset: vi.fn().mockReturnThis(),
     values: vi.fn().mockReturnThis(),
     set: vi.fn().mockReturnThis(),
-    returning: vi.fn().mockImplementation(() => Promise.resolve(mockQueryResult)),
+    returning: vi
+      .fn()
+      .mockImplementation(() => Promise.resolve(mockQueryResult)),
     then: function (resolve: any) {
       resolve(mockQueryResult);
     },
@@ -62,19 +64,23 @@ describe('TransactionsService', () => {
       };
 
       // TDD: we expect our service to block negative amounts natively
-      await expect(service.create(dto as any)).rejects.toThrow(BadRequestException);
+      await expect(service.create(dto as any)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('🔴 Sad Path: should throw BadRequestException if type is invalid', async () => {
       const dto = {
         amount: 1500,
-        type: 'INVALID_TYPE', 
+        type: 'INVALID_TYPE',
         title: 'Ifood',
         date: new Date(),
         userId: 'user-123',
       };
 
-      await expect(service.create(dto as any)).rejects.toThrow(BadRequestException);
+      await expect(service.create(dto as any)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('🟢 Happy Path: should create a transaction successfully saving as cents', async () => {
@@ -88,8 +94,14 @@ describe('TransactionsService', () => {
         categoryId: 'cat-1',
       };
 
-      const expectedResponse = { id: 'txn-uuid', ...dto, date: new Date(dto.date), createdAt: new Date(), updatedAt: new Date() };
-      
+      const expectedResponse = {
+        id: 'txn-uuid',
+        ...dto,
+        date: new Date(dto.date),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
       mockQueryResult = [expectedResponse];
 
       const result = await service.create(dto as any);
@@ -124,7 +136,9 @@ describe('TransactionsService', () => {
   describe('update', () => {
     it('🔴 Sad Path: should throw NotFoundException if trying to update non-existing transaction', async () => {
       mockQueryResult = []; // Find returns empty
-      await expect(service.update('invalid-id', 'user-1', { amount: 10 })).rejects.toThrow();
+      await expect(
+        service.update('invalid-id', 'user-1', { amount: 10 }),
+      ).rejects.toThrow();
     });
 
     it('🟢 Happy Path: should update the transaction', async () => {

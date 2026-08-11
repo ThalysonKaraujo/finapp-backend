@@ -15,32 +15,30 @@ describe('TransactionsModule (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    
+
     app.useGlobalPipes(
       new ValidationPipe({
         whitelist: true,
         forbidNonWhitelisted: true,
       }),
     );
-    
+
     await app.init();
 
     // Setup: Create a user and get a Bearer token
     const randomEmail = `test-txn-${Date.now()}@example.com`;
     const password = 'password123';
 
-    await request(app.getHttpServer())
-      .post('/api/auth/sign-up/email')
-      .send({
-        name: 'Txn E2E User',
-        email: randomEmail,
-        password,
-      });
+    await request(app.getHttpServer()).post('/api/auth/sign-up/email').send({
+      name: 'Txn E2E User',
+      email: randomEmail,
+      password,
+    });
 
     const signInRes = await request(app.getHttpServer())
       .post('/api/auth/sign-in/email')
       .send({ email: randomEmail, password });
-      
+
     authToken = signInRes.body.token || signInRes.body.session?.token; // Depende da versão do plugin bearer
     testUserId = signInRes.body.user.id;
   });
@@ -60,7 +58,7 @@ describe('TransactionsModule (e2e)', () => {
           date: new Date().toISOString(),
         });
 
-      expect(response.status).toBe(401); 
+      expect(response.status).toBe(401);
     });
 
     it('🔴 Sad Path: should return 400 when amount is negative', async () => {
@@ -75,7 +73,7 @@ describe('TransactionsModule (e2e)', () => {
           // userId removido, o Guard descobre
         });
 
-      expect([400, 500]).toContain(response.status); 
+      expect([400, 500]).toContain(response.status);
     });
 
     it('🟢 Happy Path: should create a transaction', async () => {

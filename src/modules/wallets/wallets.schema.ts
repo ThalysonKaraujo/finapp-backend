@@ -3,10 +3,14 @@ import { pgTable, text, timestamp, integer } from 'drizzle-orm/pg-core';
 import { user } from '../../auth/auth.schema';
 
 export const wallets = pgTable('wallets', {
-  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
   name: text('name').notNull(),
   balance: integer('balance').default(0).notNull(), // Em centavos
-  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

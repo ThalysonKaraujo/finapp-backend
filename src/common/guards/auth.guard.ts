@@ -1,4 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { auth } from '../../auth/auth'; // Importing the betterAuth instance
 
 @Injectable()
@@ -26,7 +31,7 @@ export class AuthGuard implements CanActivate {
 
       // Attach user to the request object so our @CurrentUser decorator can pick it up
       request.user = session.user;
-      
+
       return true;
     } catch (error) {
       throw new UnauthorizedException('Authentication failed');

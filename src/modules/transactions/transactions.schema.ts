@@ -4,19 +4,30 @@ import { user } from '../../auth/auth.schema';
 import { wallets } from '../wallets/wallets.schema';
 import { categories } from '../categories/categories.schema';
 
-export const transactionTypeEnum = pgEnum('transaction_type', ['INCOME', 'EXPENSE']);
+export const transactionTypeEnum = pgEnum('transaction_type', [
+  'INCOME',
+  'EXPENSE',
+]);
 
 export const transactions = pgTable('transactions', {
-  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
   amount: integer('amount').notNull(), // Em centavos
   type: transactionTypeEnum('type').notNull(),
   title: text('title').notNull(),
   date: timestamp('date').notNull(),
-  
-  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
-  walletId: text('wallet_id').references(() => wallets.id, { onDelete: 'set null' }),
-  categoryId: text('category_id').references(() => categories.id, { onDelete: 'set null' }),
-  
+
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  walletId: text('wallet_id').references(() => wallets.id, {
+    onDelete: 'set null',
+  }),
+  categoryId: text('category_id').references(() => categories.id, {
+    onDelete: 'set null',
+  }),
+
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
