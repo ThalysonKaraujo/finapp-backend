@@ -6,6 +6,8 @@ import { describe, beforeAll, it, expect, afterAll } from 'vitest';
 
 describe('TransactionsModule (e2e)', () => {
   let app: INestApplication;
+  let authToken: string;
+  let testUserId: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -14,7 +16,6 @@ describe('TransactionsModule (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     
-    // Configura o ValidationPipe global para que os DTOs funcionem
     app.useGlobalPipes(
       new ValidationPipe({
         whitelist: true,
@@ -23,6 +24,25 @@ describe('TransactionsModule (e2e)', () => {
     );
     
     await app.init();
+
+    // Setup: Create a user and get a Bearer token
+    const randomEmail = `test-txn-${Date.now()}@example.com`;
+    const password = 'password123';
+
+    await request(app.getHttpServer())
+      .post('/api/auth/sign-up/email')
+      .send({
+        name: 'Txn E2E User',
+        email: randomEmail,
+        password,
+      });
+
+    const signInRes = await request(app.getHttpServer())
+      .post('/api/auth/sign-in/email')
+      .send({ email: randomEmail, password });
+      
+    authToken = signInRes.body.token || signInRes.body.session?.token; // Depende da versão do plugin bearer
+    testUserId = signInRes.body.user.id;
   });
 
   afterAll(async () => {
@@ -30,36 +50,7 @@ describe('TransactionsModule (e2e)', () => {
   });
 
   describe('/transactions (POST)', () => {
-    it('🔴 Sad Path: should return 400 when amount is negative', async () => {
-      const response = await request(app.getHttpServer())
-        .post('/transactions')
-        .send({
-          amount: -500, // Error: negative
-          type: 'EXPENSE',
-          title: 'Ifood',
-          date: new Date().toISOString(),
-          userId: 'user-id',
-        });
-
-      // TDD: NestJS controller/service should block this
-      expect([400, 500]).toContain(response.status); 
-    });
-
-    it('🔴 Sad Path: should return 400 when type is invalid', async () => {
-      const response = await request(app.getHttpServer())
-        .post('/transactions')
-        .send({
-          amount: 500,
-          type: 'INVALID_TYPE',
-          title: 'Ifood',
-          date: new Date().toISOString(),
-          userId: 'user-id',
-        });
-
-      expect([400, 500]).toContain(response.status);
-    });
-
-    it('🟢 Happy Path: should create a transaction', async () => {
+    it('🔴 Sad Path: should return 401 when no token is provided', async () => {
       const response = await request(app.getHttpServer())
         .post('/transactions')
         .send({
@@ -67,22 +58,48 @@ describe('TransactionsModule (e2e)', () => {
           type: 'INCOME',
           title: 'Salário',
           date: new Date().toISOString(),
-          userId: 'user-id-test-e2e',
         });
 
-      // Como o DB é real, pode falhar se userId não existir devido a Foreign Key.
-      // O ideal seria criar o usuário antes ou usar Mocks.
-      // Neste teste, validamos apenas se a requisição tentou chegar no banco.
-      // Se retornar 201 Created ou 500 (devido à FK user_id inexistente), sabemos que passou pelo controller.
-      // Para um E2E real, o ideal é criar o User antes de criar a Transaction.
-      expect([201, 500]).toContain(response.status);
+      expect(response.status).toBe(401); 
+    });
+
+    it('🔴 Sad Path: should return 400 when amount is negative', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/transactions')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          amount: -500, // Error: negative
+          type: 'EXPENSE',
+          title: 'Ifood',
+          date: new Date().toISOString(),
+          // userId removido, o Guard descobre
+        });
+
+      expect([400, 500]).toContain(response.status); 
+    });
+
+    it('🟢 Happy Path: should create a transaction', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/transactions')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          amount: 5000,
+          type: 'INCOME',
+          title: 'Salário',
+          date: new Date().toISOString(),
+        });
+
+      expect(response.status).toBe(201);
+      expect(response.body).toHaveProperty('id');
+      expect(response.body.userId).toBe(testUserId);
     });
   });
 
   describe('/transactions (GET)', () => {
     it('🟢 Happy Path: should return list of transactions', async () => {
       const response = await request(app.getHttpServer())
-        .get('/transactions?userId=user-id-test-e2e&page=1&limit=10');
+        .get('/transactions?page=1&limit=10')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
@@ -92,7 +109,8 @@ describe('TransactionsModule (e2e)', () => {
   describe('/transactions/:id (PUT)', () => {
     it('🔴 Sad Path: should return 400 when updating with invalid enum type', async () => {
       const response = await request(app.getHttpServer())
-        .put('/transactions/invalid-uuid?userId=user-id-test-e2e')
+        .put('/transactions/invalid-uuid')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({
           type: 'BLABLA', // Invalid enum
         });
