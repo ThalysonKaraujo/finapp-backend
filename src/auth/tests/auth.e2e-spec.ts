@@ -1,8 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../../app.module';
-import { describe, beforeAll, it, expect, afterAll } from 'vitest';
 
 describe('AuthModule (e2e)', () => {
   let app: INestApplication;
@@ -20,7 +20,6 @@ describe('AuthModule (e2e)', () => {
     await app.close();
   });
 
-  // Usamos um e-mail randômico para evitar conflito caso o teste rode várias vezes no mesmo banco local
   const randomEmail = `test-${Date.now()}@example.com`;
   const password = 'senha-super-forte';
 
@@ -49,7 +48,6 @@ describe('AuthModule (e2e)', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('user');
-    expect(response.body).toHaveProperty('session');
     expect(response.body.session).toHaveProperty('token');
     expect(response.body.user.email).toBe(randomEmail);
   });
