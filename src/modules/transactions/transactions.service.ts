@@ -1,9 +1,9 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 
-import { transactions } from './transactions.schema';
+import { and, desc, eq } from 'drizzle-orm';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
-import { eq, and, desc } from 'drizzle-orm';
+import { transactions } from './transactions.schema';
 
 @Injectable()
 export class TransactionsService {
@@ -21,17 +21,20 @@ export class TransactionsService {
       throw new BadRequestException('Invalid transaction type');
     }
 
-    const [transaction] = await this.db.insert(transactions).values({
-      ...dto,
-      date: new Date(dto.date),
-    }).returning();
-    
+    const [transaction] = await this.db
+      .insert(transactions)
+      .values({
+        ...dto,
+        date: new Date(dto.date),
+      })
+      .returning();
+
     return transaction;
   }
 
-  async findAll(userId: string, page: number = 1, limit: number = 20) {
+  async findAll(userId: string, page = 1, limit = 20) {
     const offset = (page - 1) * limit;
-    
+
     return this.db
       .select()
       .from(transactions)
@@ -46,11 +49,11 @@ export class TransactionsService {
       .select()
       .from(transactions)
       .where(and(eq(transactions.id, id), eq(transactions.userId, userId)));
-      
+
     if (!transaction) {
       throw new BadRequestException('Transaction not found or unauthorized');
     }
-    
+
     return transaction;
   }
 
@@ -68,7 +71,7 @@ export class TransactionsService {
       .set(updateData)
       .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
       .returning();
-      
+
     return updated;
   }
 
@@ -79,7 +82,7 @@ export class TransactionsService {
       .delete(transactions)
       .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
       .returning();
-      
+
     return removed;
   }
 }

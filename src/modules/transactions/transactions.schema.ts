@@ -1,8 +1,8 @@
 import { relations } from 'drizzle-orm';
-import { pgTable, text, timestamp, integer, pgEnum } from 'drizzle-orm/pg-core';
+import { integer, pgEnum, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 import { user } from '../../auth/auth.schema';
-import { wallets } from '../wallets/wallets.schema';
 import { categories } from '../categories/categories.schema';
+import { wallets } from '../wallets/wallets.schema';
 
 export const transactionTypeEnum = pgEnum('transaction_type', [
   'INCOME',

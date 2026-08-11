@@ -1,7 +1,7 @@
 import {
   IsEnum,
-  IsInt,
   IsISO8601,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsPositive,
