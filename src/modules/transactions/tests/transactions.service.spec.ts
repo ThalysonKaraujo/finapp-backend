@@ -6,17 +6,29 @@ import { TransactionsService } from '../transactions.service';
 describe('TransactionsService', () => {
   let service: TransactionsService;
 
-  // Mocking the Drizzle DB instance methods
+  let mockQueryResult: any = [];
+
   const mockDb = {
     insert: vi.fn().mockReturnThis(),
     values: vi.fn().mockReturnThis(),
-    returning: vi.fn(),
+    returning: vi.fn().mockImplementation(() => Promise.resolve(mockQueryResult)),
     select: vi.fn().mockReturnThis(),
     from: vi.fn().mockReturnThis(),
     where: vi.fn().mockReturnThis(),
+    orderBy: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    offset: vi.fn().mockReturnThis(),
+    update: vi.fn().mockReturnThis(),
+    set: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis(),
+    execute: vi.fn(),
+    then: function (resolve: any) {
+      resolve(mockQueryResult);
+    },
   };
 
   beforeEach(async () => {
+    mockQueryResult = []; // reset query result
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TransactionsService,
@@ -76,7 +88,7 @@ describe('TransactionsService', () => {
 
       const expectedResponse = { id: 'txn-uuid', ...dto, date: new Date(dto.date), createdAt: new Date(), updatedAt: new Date() };
       
-      mockDb.returning.mockResolvedValue([expectedResponse]);
+      mockQueryResult = [expectedResponse];
 
       const result = await service.create(dto as any);
 
@@ -88,7 +100,7 @@ describe('TransactionsService', () => {
 
   describe('findAll', () => {
     it('🟢 Happy Path: should return transactions with pagination', async () => {
-      mockDb.execute = vi.fn().mockResolvedValue([{ id: '1' }]);
+      mockQueryResult = [{ id: '1' }];
       const result = await service.findAll('user-1', 1, 20);
       expect(result).toBeDefined();
     });
@@ -96,12 +108,12 @@ describe('TransactionsService', () => {
 
   describe('findOne', () => {
     it('🔴 Sad Path: should throw NotFoundException if transaction does not exist', async () => {
-      mockDb.execute = vi.fn().mockResolvedValue([]);
+      mockQueryResult = [];
       await expect(service.findOne('invalid-id', 'user-1')).rejects.toThrow();
     });
 
     it('🟢 Happy Path: should return the transaction', async () => {
-      mockDb.execute = vi.fn().mockResolvedValue([{ id: 'txn-uuid', userId: 'user-1' }]);
+      mockQueryResult = [{ id: 'txn-uuid', userId: 'user-1' }];
       const result = await service.findOne('txn-uuid', 'user-1');
       expect(result).toBeDefined();
     });
@@ -109,13 +121,14 @@ describe('TransactionsService', () => {
 
   describe('update', () => {
     it('🔴 Sad Path: should throw NotFoundException if trying to update non-existing transaction', async () => {
-      mockDb.execute = vi.fn().mockResolvedValue([]); // Find returns empty
+      mockQueryResult = []; // Find returns empty
       await expect(service.update('invalid-id', 'user-1', { amount: 10 })).rejects.toThrow();
     });
 
     it('🟢 Happy Path: should update the transaction', async () => {
-      mockDb.execute = vi.fn().mockResolvedValue([{ id: 'txn-uuid', userId: 'user-1' }]); // Find returns mock
-      mockDb.returning.mockResolvedValue([{ id: 'txn-uuid', amount: 10 }]);
+      // Find returns mock, then Update returns mock
+      // Since it's a simple mock array, we can just return the updated item for both.
+      mockQueryResult = [{ id: 'txn-uuid', userId: 'user-1', amount: 10 }];
       const result = await service.update('txn-uuid', 'user-1', { amount: 10 });
       expect(result).toBeDefined();
     });
@@ -123,13 +136,12 @@ describe('TransactionsService', () => {
 
   describe('remove', () => {
     it('🔴 Sad Path: should throw NotFoundException if trying to remove non-existing transaction', async () => {
-      mockDb.execute = vi.fn().mockResolvedValue([]); // Find returns empty
+      mockQueryResult = []; // Find returns empty
       await expect(service.remove('invalid-id', 'user-1')).rejects.toThrow();
     });
 
     it('🟢 Happy Path: should remove the transaction', async () => {
-      mockDb.execute = vi.fn().mockResolvedValue([{ id: 'txn-uuid', userId: 'user-1' }]); // Find returns mock
-      mockDb.returning.mockResolvedValue([{ id: 'txn-uuid' }]);
+      mockQueryResult = [{ id: 'txn-uuid', userId: 'user-1' }];
       const result = await service.remove('txn-uuid', 'user-1');
       expect(result).toBeDefined();
     });
