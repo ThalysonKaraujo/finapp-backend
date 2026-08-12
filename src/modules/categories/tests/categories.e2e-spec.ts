@@ -48,7 +48,6 @@ describe('CategoriesModule (e2e)', () => {
   });
 
   afterAll(async () => {
-    // Limpeza Cirúrgica (Cascade apaga as categorias criadas por esse usuário)
     if (testUserId && db) {
       await db.delete(user).where(eq(user.id, testUserId));
     }
@@ -77,7 +76,7 @@ describe('CategoriesModule (e2e)', () => {
           color: '#FF0000',
         });
 
-      expect([400, 500]).toContain(response.status); // O ValidationPipe barra e lança 400
+      expect([400, 500]).toContain(response.status);
     });
 
     it('🟢 Happy Path: should create a category successfully', async () => {
@@ -94,8 +93,8 @@ describe('CategoriesModule (e2e)', () => {
       expect(response.body).toHaveProperty('id');
       expect(response.body.name).toBe('Alimentação');
       expect(response.body.userId).toBe(testUserId);
-      
-      createdCategoryId = response.body.id; // Guarda para os próximos testes
+
+      createdCategoryId = response.body.id;
     });
   });
 
@@ -154,12 +153,11 @@ describe('CategoriesModule (e2e)', () => {
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
-      
-      // Valida se sumiu
+
       const checkResponse = await request(app.getHttpServer())
         .get(`/categories/${createdCategoryId}`)
         .set('Authorization', `Bearer ${authToken}`);
-      
+
       expect(checkResponse.status).toBe(404);
     });
   });
