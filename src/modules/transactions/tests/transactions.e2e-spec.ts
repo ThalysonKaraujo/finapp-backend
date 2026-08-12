@@ -1,11 +1,14 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { eq } from 'drizzle-orm';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../../../app.module';
+import { user } from '../../../auth/auth.schema';
 
 describe('TransactionsModule (e2e)', () => {
   let app: INestApplication;
+  let db: any;
   let authToken: string;
   let testUserId: string;
 
@@ -24,6 +27,7 @@ describe('TransactionsModule (e2e)', () => {
     );
 
     await app.init();
+    db = app.get('PG_CONNECTION');
 
     // Setup: Create a user and get a Bearer token
     const randomEmail = `test-txn-${Date.now()}@example.com`;
@@ -44,6 +48,9 @@ describe('TransactionsModule (e2e)', () => {
   });
 
   afterAll(async () => {
+    if (testUserId && db) {
+      await db.delete(user).where(eq(user.id, testUserId));
+    }
     await app.close();
   });
 
@@ -66,11 +73,10 @@ describe('TransactionsModule (e2e)', () => {
         .post('/transactions')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
-          amount: -500, // Error: negative
+          amount: -500,
           type: 'EXPENSE',
           title: 'Ifood',
           date: new Date().toISOString(),
-          // userId removido, o Guard descobre
         });
 
       expect([400, 500]).toContain(response.status);
