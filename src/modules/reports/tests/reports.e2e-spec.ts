@@ -52,14 +52,24 @@ describe('ReportsModule (e2e)', () => {
       .send({ name: 'Transporte', color: '#00FF00' });
     const cat2 = cat2Res.body.id;
 
-    // 3. Setup Data (Transactions for 08/2026)
+    // 3. Setup Data (Goals)
+    await request(app.getHttpServer())
+      .post('/goals')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ categoryId: cat1, percentage: 30 });
+
+    await request(app.getHttpServer())
+      .post('/goals')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ categoryId: cat2, percentage: 15 });
+
+    // 4. Setup Data (Transactions for 08/2026)
     const txns = [
-      { amount: 50000, type: 'INCOME', title: 'Salario', date: '2026-08-05T10:00:00.000Z' }, // 500.00 Income
-      { amount: 15000, type: 'INCOME', title: 'Freela', date: '2026-08-15T10:00:00.000Z' }, // 150.00 Income
-      { amount: 20000, type: 'EXPENSE', title: 'Mercado', date: '2026-08-10T10:00:00.000Z', categoryId: cat1 }, // 200.00 Expense
-      { amount: 5000, type: 'EXPENSE', title: 'Ifood', date: '2026-08-12T10:00:00.000Z', categoryId: cat1 }, // 50.00 Expense
-      { amount: 10000, type: 'EXPENSE', title: 'Uber', date: '2026-08-14T10:00:00.000Z', categoryId: cat2 }, // 100.00 Expense
-      // Transaction in another month (should be ignored by the report)
+      { amount: 50000, type: 'INCOME', title: 'Salario', date: '2026-08-05T10:00:00.000Z' },
+      { amount: 15000, type: 'INCOME', title: 'Freela', date: '2026-08-15T10:00:00.000Z' },
+      { amount: 20000, type: 'EXPENSE', title: 'Mercado', date: '2026-08-10T10:00:00.000Z', categoryId: cat1 },
+      { amount: 5000, type: 'EXPENSE', title: 'Ifood', date: '2026-08-12T10:00:00.000Z', categoryId: cat1 },
+      { amount: 10000, type: 'EXPENSE', title: 'Uber', date: '2026-08-14T10:00:00.000Z', categoryId: cat2 },
       { amount: 99999, type: 'EXPENSE', title: 'Outro Mes', date: '2026-09-01T10:00:00.000Z' },
     ];
 
@@ -99,11 +109,6 @@ describe('ReportsModule (e2e)', () => {
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.status).toBe(200);
-
-      // Incomes: 50000 + 15000 = 65000
-      // Expenses: 20000 + 5000 + 10000 = 35000
-      // Balance: 65000 - 35000 = 30000
-
       expect(res.body.incomes).toBe(65000);
       expect(res.body.expenses).toBe(35000);
       expect(res.body.balance).toBe(30000);
@@ -120,15 +125,29 @@ describe('ReportsModule (e2e)', () => {
       expect(Array.isArray(cats)).toBe(true);
       expect(cats.length).toBe(2);
 
-      // find Alimentacao
       const alimentacao = cats.find((c: any) => c.name === 'Alimentação');
       expect(alimentacao).toBeDefined();
-      expect(alimentacao.total).toBe(25000); // 20000 + 5000
+      expect(alimentacao.total).toBe(25000); 
 
-      // find Transporte
       const transporte = cats.find((c: any) => c.name === 'Transporte');
       expect(transporte).toBeDefined();
       expect(transporte.total).toBe(10000);
+    });
+    
+    it('🟢 Happy Path: should return goals for ideal distribution', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/reports/monthly?month=8&year=2026')
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(res.status).toBe(200);
+
+      const goals = res.body.goals;
+      expect(Array.isArray(goals)).toBe(true);
+      expect(goals.length).toBe(2);
+      
+      const alimentacaoGoal = goals.find((g: any) => g.name === 'Alimentação');
+      expect(alimentacaoGoal.percentage).toBe(30);
+      expect(alimentacaoGoal.color).toBe('#FF0000');
     });
     
     it('🟢 Happy Path: should return zeros for a month with no data', async () => {

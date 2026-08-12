@@ -3,7 +3,7 @@ import { IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 export class CreateWalletDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @IsInt()
   @IsOptional()
