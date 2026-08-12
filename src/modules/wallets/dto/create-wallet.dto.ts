@@ -7,7 +7,10 @@ export class CreateWalletDto {
   @IsNotEmpty()
   name!: string;
 
-  @ApiPropertyOptional({ example: 10000, description: 'Initial balance in cents' })
+  @ApiPropertyOptional({
+    example: 10000,
+    description: 'Initial balance in cents',
+  })
   @IsInt()
   @IsOptional()
   balance?: number;
