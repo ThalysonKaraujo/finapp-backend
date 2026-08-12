@@ -116,9 +116,13 @@ describe('TransactionsService', () => {
 
   describe('findAll', () => {
     it('🟢 Happy Path: should return transactions with pagination', async () => {
-      mockQueryResult = [{ id: '1' }];
+      mockQueryResult = [{ id: '1', total: 10 }];
       const result = await service.findAll('user-1', 1, 20);
       expect(result).toBeDefined();
+      expect(result.data).toBeDefined();
+      expect(result.meta).toBeDefined();
+      expect(result.meta.total).toBe(10);
+      expect(result.meta.totalPages).toBe(1);
     });
   });
 

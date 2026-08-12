@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, count, desc, eq } from 'drizzle-orm';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { transactions } from './transactions.schema';
@@ -39,13 +39,31 @@ export class TransactionsService {
   async findAll(userId: string, page = 1, limit = 20) {
     const offset = (page - 1) * limit;
 
-    return this.db
-      .select()
-      .from(transactions)
-      .where(eq(transactions.userId, userId))
-      .orderBy(desc(transactions.date))
-      .limit(limit)
-      .offset(offset);
+    const [data, [{ total }]] = await Promise.all([
+      this.db
+        .select()
+        .from(transactions)
+        .where(eq(transactions.userId, userId))
+        .orderBy(desc(transactions.date))
+        .limit(limit)
+        .offset(offset),
+      this.db
+        .select({ total: count() })
+        .from(transactions)
+        .where(eq(transactions.userId, userId)),
+    ]);
+
+    const totalPages = Math.ceil(Number(total) / limit);
+
+    return {
+      data,
+      meta: {
+        total: Number(total),
+        page,
+        limit,
+        totalPages,
+      },
+    };
   }
 
   async findOne(id: string, userId: string) {

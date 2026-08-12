@@ -100,13 +100,18 @@ describe('TransactionsModule (e2e)', () => {
   });
 
   describe('/transactions (GET)', () => {
-    it('🟢 Happy Path: should return list of transactions', async () => {
+    it('🟢 Happy Path: should return list of transactions with pagination metadata', async () => {
       const response = await request(app.getHttpServer())
         .get('/transactions?page=1&limit=10')
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
-      expect(Array.isArray(response.body)).toBe(true);
+      expect(Array.isArray(response.body.data)).toBe(true);
+      expect(response.body.meta).toBeDefined();
+      expect(response.body.meta.page).toBe(1);
+      expect(response.body.meta.limit).toBe(10);
+      expect(typeof response.body.meta.total).toBe('number');
+      expect(typeof response.body.meta.totalPages).toBe('number');
     });
   });
 
