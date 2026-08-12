@@ -13,12 +13,14 @@ O **FinApp Backend** é o motor que alimenta um ecossistema financeiro. Constru�
 
 ## 🚀 Funcionalidades Principais
 
-- 🔐 **Autenticação Avançada:** Baseada em [Better Auth](https://better-auth.com/), totalmente tipada e segura.
+- 🔐 **Segurança e Autenticação:** Baseada em [Better Auth](https://better-auth.com/), protegida por **Helmet**, validação de CORS e **Rate Limiting** (Throttler) contra ataques DDoS e Força Bruta.
+- ⚡ **Alta Performance (Redis):** Sessões em cache no Redis (com token _hashed_ via SHA-256) evitando viagens desnecessárias ao banco de dados no `AuthGuard`.
 - 💼 **Gestão de Carteiras (Wallets):** Gerencie de onde o dinheiro entra e sai.
 - 🏷️ **Categorização de Gastos:** Rotule as despesas/receitas com customização de cores e ícones.
-- 💳 **Transações (Transactions):** Registro detalhado de despesas e receitas. Valores trafegam sempre em **centavos** (evitando problemas de flutuação de moedas).
-- 🎯 **Metas e Orçamentos (Goals):** Defina o limite de gastos em % para cada categoria (Ex: "30% para Alimentação") impedindo metas logicamente inválidas (soma > 100%).
-- 📊 **Relatórios Otimizados:** O endpoint mensal processa complexas agregações e métricas (`Ideal vs Real`) nativamente no Postgres via `json_agg` e retorna tudo mastigado em um só JSON, exigindo processamento zero do Frontend/Mobile.
+- 💳 **Transações Paginas:** Registro de despesas/receitas com estrutura de **Paginação (Metadata e Count simultâneo)** visando performance (`LIMIT/OFFSET`). Valores sempre trafegam em **centavos**.
+- 🎯 **Metas e Orçamentos (Goals):** Defina o limite de gastos em % para cada categoria impedindo metas logicamente inválidas (soma > 100%).
+- 📊 **Relatórios Otimizados:** O endpoint mensal processa complexas agregações e métricas (`Ideal vs Real`) nativamente no Postgres via `json_agg`, poupando CPU do Frontend.
+- 📚 **Documentação Automática:** Swagger/OpenAPI configurado e rodando em `/api/docs`.
 
 ## 🏗️ Arquitetura
 
@@ -30,9 +32,10 @@ Nós seguimos as diretrizes do arquivo raiz `AGENTS.md`:
 ## 🛠️ Tecnologias Utilizadas
 
 - **Framework:** NestJS (Node.js)
-- **Database:** PostgreSQL
-- **ORM:** Drizzle ORM
-- **Authentication:** Better Auth (com `@better-auth/cli`)
+- **Database:** PostgreSQL + Drizzle ORM
+- **Cache:** Redis
+- **Autenticação:** Better Auth
+- **Segurança:** Helmet, @nestjs/throttler
 - **Testes (Unitários & E2E):** Vitest + Supertest
 - **Ambiente:** WSL / Linux Nativo
 
