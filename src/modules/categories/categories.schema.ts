@@ -7,6 +7,8 @@ export const categories = pgTable('categories', {
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
   name: text('name').notNull(),
+  color: text('color'),
+  icon: text('icon'),
   userId: text('user_id')
     .notNull()
     .references(() => user.id, { onDelete: 'cascade' }),
