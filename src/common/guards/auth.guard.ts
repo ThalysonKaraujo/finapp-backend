@@ -1,3 +1,4 @@
+import * as crypto from 'node:crypto';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
   CanActivate,
@@ -24,8 +25,11 @@ export class AuthGuard implements CanActivate {
       }
       const token = authHeader.split(' ')[1];
 
+      // Hash the token so we don't store raw credentials in Redis
+      const cacheKey = crypto.createHash('sha256').update(token).digest('hex');
+
       // 1. Check cache first
-      const cachedSession = await this.cacheManager.get(token);
+      const cachedSession = await this.cacheManager.get(cacheKey);
       if (cachedSession) {
         request.user = (cachedSession as any).user;
         return true;
@@ -49,7 +53,7 @@ export class AuthGuard implements CanActivate {
       }
 
       // 3. Save to cache
-      await this.cacheManager.set(token, session);
+      await this.cacheManager.set(cacheKey, session);
 
       // Attach user to the request object so our @CurrentUser decorator can pick it up
       request.user = session.user;
