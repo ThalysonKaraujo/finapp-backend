@@ -25,7 +25,6 @@ export class TransactionsController {
     @Body() createTransactionDto: CreateTransactionDto,
     @CurrentUser('id') userId: string,
   ) {
-    // Injetamos o userId de forma segura e setamos no DTO para não confiar no valor enviado pelo client
     createTransactionDto.userId = userId;
     return this.transactionsService.create(createTransactionDto);
   }
