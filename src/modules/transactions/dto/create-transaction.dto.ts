@@ -24,10 +24,6 @@ export class CreateTransactionDto {
   @IsISO8601()
   date: string;
 
-  @IsString()
-  @IsNotEmpty()
-  userId: string;
-
   @IsOptional()
   @IsString()
   walletId?: string;

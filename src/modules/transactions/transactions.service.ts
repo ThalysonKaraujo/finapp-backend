@@ -16,7 +16,7 @@ export class TransactionsService {
     private readonly db: any, // TBD: proper drizzle type
   ) {}
 
-  async create(dto: CreateTransactionDto) {
+  async create(dto: CreateTransactionDto & { userId: string }) {
     if (dto.amount <= 0) {
       throw new BadRequestException('Amount must be greater than zero');
     }
