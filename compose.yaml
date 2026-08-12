@@ -16,6 +16,15 @@ services:
     networks:
       - finapp_network
 
+  redis:
+    image: redis:7-alpine
+    container_name: finapp_redis
+    restart: always
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    networks:
+      - finapp_network
+
 volumes:
   postgres_data:
 
