@@ -5,7 +5,6 @@ export const CurrentUser = createParamDecorator(
     const request = ctx.switchToHttp().getRequest();
     const user = request.user;
 
-    // Se passarmos um campo específico ex: @CurrentUser('id')
     return data ? user?.[data] : user;
   },
 );

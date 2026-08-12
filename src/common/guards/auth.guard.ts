@@ -1,3 +1,4 @@
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
   CanActivate,
   ExecutionContext,
@@ -5,9 +6,8 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { auth } from '../../auth/auth'; // Importing the betterAuth instance
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import { auth } from '../../auth/auth'; // Importing the betterAuth instance
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -18,7 +18,7 @@ export class AuthGuard implements CanActivate {
 
     try {
       // Extract the bearer token to use as cache key
-      const authHeader = request.headers['authorization'];
+      const authHeader = request.headers.authorization;
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
         throw new UnauthorizedException('Invalid or missing token');
       }
