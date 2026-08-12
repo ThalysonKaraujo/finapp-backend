@@ -2,13 +2,17 @@ import {
   BadRequestException,
   Controller,
   Get,
+  ParseIntPipe,
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { ReportsService } from './reports.service';
 
+@ApiTags('Reports')
+@ApiBearerAuth()
 @UseGuards(AuthGuard)
 @Controller('reports')
 export class ReportsController {

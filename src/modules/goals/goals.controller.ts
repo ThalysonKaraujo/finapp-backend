@@ -8,12 +8,15 @@ import {
   Put,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { CreateGoalDto } from './dto/create-goal.dto';
 import { UpdateGoalDto } from './dto/update-goal.dto';
 import { GoalsService } from './goals.service';
 
+@ApiTags('Goals')
+@ApiBearerAuth()
 @UseGuards(AuthGuard)
 @Controller('goals')
 export class GoalsController {
