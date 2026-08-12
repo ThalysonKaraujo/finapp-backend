@@ -10,6 +10,7 @@ describe('CategoriesService', () => {
   const mockChain = {
     from: vi.fn().mockReturnThis(),
     where: vi.fn().mockReturnThis(),
+    orderBy: vi.fn().mockReturnThis(),
     values: vi.fn().mockReturnThis(),
     set: vi.fn().mockReturnThis(),
     returning: vi.fn().mockImplementation(() => Promise.resolve(mockQueryResult)),
