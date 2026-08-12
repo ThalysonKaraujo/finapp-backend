@@ -80,7 +80,7 @@ describe('GoalsModule (e2e)', () => {
         .post('/categories')
         .set('Authorization', `Bearer ${authToken}`)
         .send({ name: 'Lazer', color: '#0000FF' });
-      
+
       const res = await request(app.getHttpServer())
         .post('/goals')
         .set('Authorization', `Bearer ${authToken}`)

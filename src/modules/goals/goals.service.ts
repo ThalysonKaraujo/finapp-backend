@@ -1,4 +1,9 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { and, eq, sql } from 'drizzle-orm';
 import { CreateGoalDto } from './dto/create-goal.dto';
 import { UpdateGoalDto } from './dto/update-goal.dto';
@@ -13,7 +18,7 @@ export class GoalsService {
 
   private async getTotalPercentage(userId: string): Promise<number> {
     const result = await this.db.execute(
-      sql`SELECT COALESCE(SUM(percentage), 0) as "totalPercentage" FROM goals WHERE user_id = ${userId}`
+      sql`SELECT COALESCE(SUM(percentage), 0) as "totalPercentage" FROM goals WHERE user_id = ${userId}`,
     );
     return Number(result[0]?.totalPercentage || 0);
   }
@@ -21,13 +26,17 @@ export class GoalsService {
   async create(dto: CreateGoalDto, userId: string) {
     const total = await this.getTotalPercentage(userId);
     if (total + dto.percentage > 100) {
-      throw new BadRequestException(`Cannot create goal. Total percentage would exceed 100%. Current total: ${total}%`);
+      throw new BadRequestException(
+        `Cannot create goal. Total percentage would exceed 100%. Current total: ${total}%`,
+      );
     }
 
     const existing = await this.db
       .select()
       .from(goals)
-      .where(and(eq(goals.userId, userId), eq(goals.categoryId, dto.categoryId)));
+      .where(
+        and(eq(goals.userId, userId), eq(goals.categoryId, dto.categoryId)),
+      );
 
     if (existing && existing.length > 0) {
       throw new BadRequestException('A goal for this category already exists.');
@@ -46,10 +55,7 @@ export class GoalsService {
   }
 
   async findAll(userId: string) {
-    return this.db
-      .select()
-      .from(goals)
-      .where(eq(goals.userId, userId));
+    return this.db.select().from(goals).where(eq(goals.userId, userId));
   }
 
   async findOne(id: string, userId: string) {
@@ -68,12 +74,17 @@ export class GoalsService {
   async update(id: string, userId: string, dto: UpdateGoalDto) {
     const currentGoal = await this.findOne(id, userId);
 
-    if (dto.percentage !== undefined && dto.percentage !== currentGoal.percentage) {
+    if (
+      dto.percentage !== undefined &&
+      dto.percentage !== currentGoal.percentage
+    ) {
       const total = await this.getTotalPercentage(userId);
       const netDifference = dto.percentage - currentGoal.percentage;
-      
+
       if (total + netDifference > 100) {
-        throw new BadRequestException(`Cannot update goal. Total percentage would exceed 100%. Current total: ${total}%`);
+        throw new BadRequestException(
+          `Cannot update goal. Total percentage would exceed 100%. Current total: ${total}%`,
+        );
       }
     }
 

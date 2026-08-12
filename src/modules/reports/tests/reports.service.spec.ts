@@ -39,10 +39,20 @@ describe('ReportsService', () => {
           expenses: '25000',
           balance: '25000',
           expensesByCategory: [
-            { categoryId: 'cat-1', name: 'Alimentação', total: '15000', color: '#FF0000' },
-            { categoryId: 'cat-2', name: 'Transporte', total: '10000', color: '#0000FF' }
-          ]
-        }
+            {
+              categoryId: 'cat-1',
+              name: 'Alimentação',
+              total: '15000',
+              color: '#FF0000',
+            },
+            {
+              categoryId: 'cat-2',
+              name: 'Transporte',
+              total: '10000',
+              color: '#0000FF',
+            },
+          ],
+        },
       ];
 
       const result = await service.getMonthlySummary('user-1', 8, 2026);

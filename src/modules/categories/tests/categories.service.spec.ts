@@ -13,8 +13,11 @@ describe('CategoriesService', () => {
     orderBy: vi.fn().mockReturnThis(),
     values: vi.fn().mockReturnThis(),
     set: vi.fn().mockReturnThis(),
-    returning: vi.fn().mockImplementation(() => Promise.resolve(mockQueryResult)),
+    returning: vi
+      .fn()
+      .mockImplementation(() => Promise.resolve(mockQueryResult)),
     // biome-ignore lint/suspicious/noThenProperty: Necessário para mockar a Promise do Drizzle
+    // biome-ignore lint/suspicious/noThenProperty: Mocking Drizzle queries which are thenable
     then: (resolve: any) => {
       resolve(mockQueryResult);
     },
@@ -56,7 +59,9 @@ describe('CategoriesService', () => {
         userId: 'user-1',
       };
 
-      await expect(service.create(dto as any)).rejects.toThrow(BadRequestException);
+      await expect(service.create(dto as any)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('🟢 Happy Path: should create a category successfully', async () => {
@@ -96,7 +101,9 @@ describe('CategoriesService', () => {
   describe('findOne', () => {
     it('🔴 Sad Path: should throw NotFoundException if category does not exist', async () => {
       mockQueryResult = [];
-      await expect(service.findOne('invalid-id', 'user-1')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('invalid-id', 'user-1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('🟢 Happy Path: should return the category', async () => {
@@ -109,12 +116,16 @@ describe('CategoriesService', () => {
   describe('update', () => {
     it('🔴 Sad Path: should throw NotFoundException if trying to update non-existing category', async () => {
       mockQueryResult = [];
-      await expect(service.update('invalid-id', 'user-1', { name: 'New' })).rejects.toThrow(NotFoundException);
+      await expect(
+        service.update('invalid-id', 'user-1', { name: 'New' }),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('🟢 Happy Path: should update the category', async () => {
       mockQueryResult = [{ id: 'cat-uuid', userId: 'user-1', name: 'Updated' }];
-      const result = await service.update('cat-uuid', 'user-1', { name: 'Updated' });
+      const result = await service.update('cat-uuid', 'user-1', {
+        name: 'Updated',
+      });
       expect(result).toBeDefined();
       expect(result.name).toBe('Updated');
     });
@@ -123,7 +134,9 @@ describe('CategoriesService', () => {
   describe('remove', () => {
     it('🔴 Sad Path: should throw NotFoundException if trying to remove non-existing category', async () => {
       mockQueryResult = [];
-      await expect(service.remove('invalid-id', 'user-1')).rejects.toThrow(NotFoundException);
+      await expect(service.remove('invalid-id', 'user-1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('🟢 Happy Path: should remove the category', async () => {

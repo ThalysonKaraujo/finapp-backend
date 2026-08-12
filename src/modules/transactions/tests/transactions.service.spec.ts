@@ -20,6 +20,7 @@ describe('TransactionsService', () => {
       .fn()
       .mockImplementation(() => Promise.resolve(mockQueryResult)),
     // biome-ignore lint/suspicious/noThenProperty: Necessário para mockar a Promise do Drizzle
+    // biome-ignore lint/suspicious/noThenProperty: Mocking Drizzle queries which are thenable
     then: (resolve: any) => {
       resolve(mockQueryResult);
     },

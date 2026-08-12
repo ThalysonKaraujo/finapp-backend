@@ -90,7 +90,7 @@ describe('WalletsModule (e2e)', () => {
       expect(response.body.name).toBe('Nubank');
       expect(response.body.balance).toBe(0);
       expect(response.body.userId).toBe(testUserId);
-      
+
       createdWalletId = response.body.id;
     });
   });
@@ -150,11 +150,11 @@ describe('WalletsModule (e2e)', () => {
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
-      
+
       const checkResponse = await request(app.getHttpServer())
         .get(`/wallets/${createdWalletId}`)
         .set('Authorization', `Bearer ${authToken}`);
-      
+
       expect(checkResponse.status).toBe(404);
     });
   });

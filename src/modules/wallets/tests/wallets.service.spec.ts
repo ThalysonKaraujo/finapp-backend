@@ -13,8 +13,11 @@ describe('WalletsService', () => {
     orderBy: vi.fn().mockReturnThis(),
     values: vi.fn().mockReturnThis(),
     set: vi.fn().mockReturnThis(),
-    returning: vi.fn().mockImplementation(() => Promise.resolve(mockQueryResult)),
+    returning: vi
+      .fn()
+      .mockImplementation(() => Promise.resolve(mockQueryResult)),
     // biome-ignore lint/suspicious/noThenProperty: Necessário para mockar a Promise do Drizzle
+    // biome-ignore lint/suspicious/noThenProperty: Mocking Drizzle queries which are thenable
     then: (resolve: any) => {
       resolve(mockQueryResult);
     },
@@ -53,7 +56,9 @@ describe('WalletsService', () => {
         name: '',
       };
 
-      await expect(service.create(dto as any, 'user-1')).rejects.toThrow(BadRequestException);
+      await expect(service.create(dto as any, 'user-1')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('🟢 Happy Path: should create a wallet successfully with balance 0 as default', async () => {
@@ -116,7 +121,9 @@ describe('WalletsService', () => {
   describe('findOne', () => {
     it('🔴 Sad Path: should throw NotFoundException if wallet does not exist', async () => {
       mockQueryResult = [];
-      await expect(service.findOne('invalid-id', 'user-1')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('invalid-id', 'user-1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('🟢 Happy Path: should return the wallet', async () => {
@@ -129,12 +136,18 @@ describe('WalletsService', () => {
   describe('update', () => {
     it('🔴 Sad Path: should throw NotFoundException if trying to update non-existing wallet', async () => {
       mockQueryResult = [];
-      await expect(service.update('invalid-id', 'user-1', { name: 'New' })).rejects.toThrow(NotFoundException);
+      await expect(
+        service.update('invalid-id', 'user-1', { name: 'New' }),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('🟢 Happy Path: should update the wallet', async () => {
-      mockQueryResult = [{ id: 'wallet-uuid', userId: 'user-1', name: 'Updated' }];
-      const result = await service.update('wallet-uuid', 'user-1', { name: 'Updated' });
+      mockQueryResult = [
+        { id: 'wallet-uuid', userId: 'user-1', name: 'Updated' },
+      ];
+      const result = await service.update('wallet-uuid', 'user-1', {
+        name: 'Updated',
+      });
       expect(result).toBeDefined();
       expect(result.name).toBe('Updated');
     });
@@ -143,7 +156,9 @@ describe('WalletsService', () => {
   describe('remove', () => {
     it('🔴 Sad Path: should throw NotFoundException if trying to remove non-existing wallet', async () => {
       mockQueryResult = [];
-      await expect(service.remove('invalid-id', 'user-1')).rejects.toThrow(NotFoundException);
+      await expect(service.remove('invalid-id', 'user-1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('🟢 Happy Path: should remove the wallet', async () => {

@@ -21,7 +21,9 @@ export class ReportsController {
     @Query('year') yearStr?: string,
   ) {
     if (!monthStr || !yearStr) {
-      throw new BadRequestException('month and year query parameters are required');
+      throw new BadRequestException(
+        'month and year query parameters are required',
+      );
     }
 
     const month = Number.parseInt(monthStr, 10);

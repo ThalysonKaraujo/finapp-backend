@@ -23,5 +23,5 @@ export const goals = pgTable(
   (table) => ({
     // A user can only have one goal per category
     userCategoryUnique: unique().on(table.userId, table.categoryId),
-  })
+  }),
 );

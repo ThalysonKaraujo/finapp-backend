@@ -53,24 +53,26 @@ export class ReportsService {
         FROM goals g
         JOIN categories c ON c.id = g.category_id
         WHERE g.user_id = ${userId}
-      `)
+      `),
     ]);
 
     let row: any = null;
-    
+
     if (result && result.length > 0 && result[0]) {
       row = result[0];
     }
 
-    const expensesByCategory = row ? (typeof row.expensesByCategory === 'string' 
-      ? JSON.parse(row.expensesByCategory) 
-      : row.expensesByCategory || []) : [];
+    const expensesByCategory = row
+      ? typeof row.expensesByCategory === 'string'
+        ? JSON.parse(row.expensesByCategory)
+        : row.expensesByCategory || []
+      : [];
 
     const goals = (goalsResult || []).map((g: any) => ({
       categoryId: g.categoryId,
       name: g.name,
       color: g.color,
-      percentage: Number(g.percentage || 0)
+      percentage: Number(g.percentage || 0),
     }));
 
     return {
@@ -79,9 +81,9 @@ export class ReportsService {
       expenses: Number(row?.expenses || 0),
       expensesByCategory: expensesByCategory.map((cat: any) => ({
         ...cat,
-        total: Number(cat.total || 0)
+        total: Number(cat.total || 0),
       })),
-      goals
+      goals,
     };
   }
 }
