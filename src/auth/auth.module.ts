@@ -11,6 +11,7 @@ import { AuthMiddleware } from './auth.middleware';
 })
 export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(AuthMiddleware).forRoutes('/api/auth/*');
+    // Como temos um GlobalPrefix('api'), não devemos repetir o /api aqui
+    consumer.apply(AuthMiddleware).forRoutes('auth/*');
   }
 }
