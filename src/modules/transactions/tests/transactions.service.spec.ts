@@ -133,16 +133,28 @@ describe('TransactionsService', () => {
       const result = await service.create(dto as any);
 
       expect(mockDb.insert).toHaveBeenCalled();
-      
+
       // Verify if the inserted values logic was correct
       expect(mockChain.values).toHaveBeenCalledWith(
         expect.arrayContaining([
-          expect.objectContaining({ amount: 334, installmentNumber: 1, totalInstallments: 3 }),
-          expect.objectContaining({ amount: 333, installmentNumber: 2, totalInstallments: 3 }),
-          expect.objectContaining({ amount: 333, installmentNumber: 3, totalInstallments: 3 }),
-        ])
+          expect.objectContaining({
+            amount: 334,
+            installmentNumber: 1,
+            totalInstallments: 3,
+          }),
+          expect.objectContaining({
+            amount: 333,
+            installmentNumber: 2,
+            totalInstallments: 3,
+          }),
+          expect.objectContaining({
+            amount: 333,
+            installmentNumber: 3,
+            totalInstallments: 3,
+          }),
+        ]),
       );
-      
+
       expect(Array.isArray(result)).toBe(true);
       expect(result).toHaveLength(3);
     });

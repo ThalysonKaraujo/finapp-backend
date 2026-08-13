@@ -28,7 +28,7 @@ export class TransactionsService {
     const { installments, ...baseDto } = dto;
     const numInstallments = installments && installments > 0 ? installments : 1;
 
-    const transactionsToInsert = [];
+    const transactionsToInsert: (typeof transactions.$inferInsert)[] = [];
     const recurrenceId = numInstallments > 1 ? crypto.randomUUID() : null;
 
     const baseAmount = Math.floor(baseDto.amount / numInstallments);
