@@ -238,13 +238,13 @@ describe('TransactionsService', () => {
     it('🟢 Happy Path: should update future installments in cascade mode', async () => {
       mockQueryResult = [
         { id: 'txn-1', recurrenceId: 'rec-1', installmentNumber: 3 },
-        { id: 'txn-2', recurrenceId: 'rec-1', installmentNumber: 4 }
+        { id: 'txn-2', recurrenceId: 'rec-1', installmentNumber: 4 },
       ];
 
       const result = await service.update('txn-1', 'user-1', {
         amount: 2000,
         date: new Date('2026-10-05T10:00:00Z').toISOString(),
-        updateFutureInstallments: true
+        updateFutureInstallments: true,
       });
 
       expect(mockDb.transaction).toHaveBeenCalled();

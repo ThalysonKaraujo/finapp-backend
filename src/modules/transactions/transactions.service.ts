@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, count, desc, eq, gte, asc } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte } from 'drizzle-orm';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { transactions } from './transactions.schema';
@@ -26,12 +26,19 @@ export class TransactionsService {
     }
 
     const { installments, isInfinite, ...baseDto } = dto;
-    const numInstallments = isInfinite ? 24 : (installments && installments > 0 ? installments : 1);
+    const numInstallments = isInfinite
+      ? 24
+      : installments && installments > 0
+        ? installments
+        : 1;
 
     const transactionsToInsert: (typeof transactions.$inferInsert)[] = [];
-    const recurrenceId = (numInstallments > 1 || isInfinite) ? crypto.randomUUID() : null;
+    const recurrenceId =
+      numInstallments > 1 || isInfinite ? crypto.randomUUID() : null;
 
-    const baseAmount = isInfinite ? baseDto.amount : Math.floor(baseDto.amount / numInstallments);
+    const baseAmount = isInfinite
+      ? baseDto.amount
+      : Math.floor(baseDto.amount / numInstallments);
     const remainder = isInfinite ? 0 : baseDto.amount % numInstallments;
 
     for (let i = 1; i <= numInstallments; i++) {
@@ -45,8 +52,12 @@ export class TransactionsService {
         amount: currentAmount,
         date: currentDate,
         recurrenceId,
-        installmentNumber: (numInstallments > 1 || isInfinite) ? i : null,
-        totalInstallments: isInfinite ? null : (numInstallments > 1 ? numInstallments : null),
+        installmentNumber: numInstallments > 1 || isInfinite ? i : null,
+        totalInstallments: isInfinite
+          ? null
+          : numInstallments > 1
+            ? numInstallments
+            : null,
       });
     }
 
@@ -105,14 +116,21 @@ export class TransactionsService {
     const targetTransaction = await this.findOne(id, userId); // Ensure it exists and belongs to user
 
     const { updateFutureInstallments, ...updateDataRaw } = dto;
-    const updateData: Record<string, unknown> = { ...updateDataRaw, updatedAt: new Date() };
+    const updateData: Record<string, unknown> = {
+      ...updateDataRaw,
+      updatedAt: new Date(),
+    };
 
-    if (!updateFutureInstallments || !targetTransaction.recurrenceId || !targetTransaction.installmentNumber) {
+    if (
+      !updateFutureInstallments ||
+      !targetTransaction.recurrenceId ||
+      !targetTransaction.installmentNumber
+    ) {
       // Normal single update
       if (updateDataRaw.date) {
         updateData.date = new Date(updateDataRaw.date);
       }
-      
+
       const [updated] = await this.db
         .update(transactions)
         .set(updateData)
@@ -129,19 +147,25 @@ export class TransactionsService {
       .where(
         and(
           eq(transactions.recurrenceId, targetTransaction.recurrenceId),
-          gte(transactions.installmentNumber, targetTransaction.installmentNumber),
-          eq(transactions.userId, userId)
-        )
+          gte(
+            transactions.installmentNumber,
+            targetTransaction.installmentNumber,
+          ),
+          eq(transactions.userId, userId),
+        ),
       )
       .orderBy(asc(transactions.installmentNumber));
 
     // We do multiple updates in a db transaction
     const updatedTransactions = await this.db.transaction(async (tx) => {
-      const results = [];
+      const results: (typeof transactions.$inferSelect)[] = [];
       for (let i = 0; i < futureTransactions.length; i++) {
         const t = futureTransactions[i];
-        const tUpdateData: Record<string, unknown> = { ...updateDataRaw, updatedAt: new Date() };
-        
+        const tUpdateData: Record<string, unknown> = {
+          ...updateDataRaw,
+          updatedAt: new Date(),
+        };
+
         if (updateDataRaw.date) {
           const newDate = new Date(updateDataRaw.date);
           // Advance the month incrementally starting from the chosen new date
@@ -154,7 +178,7 @@ export class TransactionsService {
           .set(tUpdateData)
           .where(eq(transactions.id, t.id))
           .returning();
-          
+
         results.push(updated);
       }
       return results;

@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsEnum,
   IsISO8601,
   IsInt,
@@ -8,7 +9,6 @@ import {
   IsString,
   IsUUID,
   Min,
-  IsBoolean,
 } from 'class-validator';
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -68,7 +68,8 @@ export class CreateTransactionDto {
   installments?: number;
 
   @ApiPropertyOptional({
-    description: 'Se verdadeiro, projeta 24 transações mantendo o valor cheio, caracterizando uma assinatura sem fim',
+    description:
+      'Se verdadeiro, projeta 24 transações mantendo o valor cheio, caracterizando uma assinatura sem fim',
     example: true,
   })
   @IsBoolean()
