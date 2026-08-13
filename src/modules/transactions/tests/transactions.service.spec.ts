@@ -112,6 +112,40 @@ describe('TransactionsService', () => {
       expect(mockChain.values).toHaveBeenCalled();
       expect(result).toEqual(expectedResponse);
     });
+
+    it('🟢 Happy Path: should create installments spreading remainder correctly', async () => {
+      const dto = {
+        amount: 1000, // R$ 10,00 em 3x
+        type: 'EXPENSE',
+        title: 'Compra Parcelada',
+        date: new Date('2026-08-01T10:00:00Z').toISOString(),
+        userId: 'user-1',
+        installments: 3,
+      };
+
+      // Mock returns the inserted array
+      mockQueryResult = [
+        { id: '1', amount: 334 },
+        { id: '2', amount: 333 },
+        { id: '3', amount: 333 },
+      ];
+
+      const result = await service.create(dto as any);
+
+      expect(mockDb.insert).toHaveBeenCalled();
+      
+      // Verify if the inserted values logic was correct
+      expect(mockChain.values).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ amount: 334, installmentNumber: 1, totalInstallments: 3 }),
+          expect.objectContaining({ amount: 333, installmentNumber: 2, totalInstallments: 3 }),
+          expect.objectContaining({ amount: 333, installmentNumber: 3, totalInstallments: 3 }),
+        ])
+      );
+      
+      expect(Array.isArray(result)).toBe(true);
+      expect(result).toHaveLength(3);
+    });
   });
 
   describe('findAll', () => {

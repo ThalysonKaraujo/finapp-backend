@@ -25,15 +25,37 @@ export class TransactionsService {
       throw new BadRequestException('Invalid transaction type');
     }
 
-    const [transaction] = await this.db
+    const { installments, ...baseDto } = dto;
+    const numInstallments = installments && installments > 0 ? installments : 1;
+
+    const transactionsToInsert = [];
+    const recurrenceId = numInstallments > 1 ? crypto.randomUUID() : null;
+
+    const baseAmount = Math.floor(baseDto.amount / numInstallments);
+    const remainder = baseDto.amount % numInstallments;
+
+    for (let i = 1; i <= numInstallments; i++) {
+      const currentDate = new Date(baseDto.date);
+      currentDate.setMonth(currentDate.getMonth() + (i - 1));
+
+      const currentAmount = baseAmount + (i === 1 ? remainder : 0);
+
+      transactionsToInsert.push({
+        ...baseDto,
+        amount: currentAmount,
+        date: currentDate,
+        recurrenceId,
+        installmentNumber: numInstallments > 1 ? i : null,
+        totalInstallments: numInstallments > 1 ? numInstallments : null,
+      });
+    }
+
+    const inserted = await this.db
       .insert(transactions)
-      .values({
-        ...dto,
-        date: new Date(dto.date),
-      })
+      .values(transactionsToInsert)
       .returning();
 
-    return transaction;
+    return numInstallments > 1 ? inserted : inserted[0];
   }
 
   async findAll(userId: string, page = 1, limit = 20) {

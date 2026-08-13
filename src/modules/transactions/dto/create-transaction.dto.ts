@@ -49,10 +49,19 @@ export class CreateTransactionDto {
   walletId?: string;
 
   @ApiPropertyOptional({
-    example: 'uuid-category-123',
-    description: 'Optional category ID',
+    description: 'ID da Categoria',
+    example: 'uuid-da-categoria',
   })
-  @IsOptional()
   @IsString()
+  @IsOptional()
   categoryId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Quantidade de parcelas/meses (1 para transação única)',
+    example: 12,
+  })
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  installments?: number;
 }
