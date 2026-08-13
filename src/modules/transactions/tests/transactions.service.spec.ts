@@ -31,6 +31,7 @@ describe('TransactionsService', () => {
     select: vi.fn().mockReturnValue(mockChain),
     update: vi.fn().mockReturnValue(mockChain),
     delete: vi.fn().mockReturnValue(mockChain),
+    transaction: vi.fn().mockImplementation(async (cb) => cb(mockDb)),
   };
 
   beforeEach(async () => {
@@ -158,6 +159,39 @@ describe('TransactionsService', () => {
       expect(Array.isArray(result)).toBe(true);
       expect(result).toHaveLength(3);
     });
+
+    it('🟢 Happy Path: should create infinite subscriptions (24 months) without dividing amount', async () => {
+      const dto = {
+        amount: 5000,
+        type: 'EXPENSE',
+        title: 'Netflix',
+        date: new Date('2026-08-01T10:00:00Z').toISOString(),
+        userId: 'user-1',
+        isInfinite: true,
+      };
+
+      mockQueryResult = new Array(24).fill({ id: 'dummy' });
+
+      const result = await service.create(dto as any);
+
+      expect(mockDb.insert).toHaveBeenCalled();
+
+      expect(mockChain.values).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            amount: 5000,
+            installmentNumber: 1,
+            totalInstallments: null,
+          }),
+          expect.objectContaining({
+            amount: 5000,
+            installmentNumber: 24,
+            totalInstallments: null,
+          }),
+        ]),
+      );
+      expect(result).toHaveLength(24);
+    });
   });
 
   describe('findAll', () => {
@@ -198,6 +232,22 @@ describe('TransactionsService', () => {
       // Since it's a simple mock array, we can just return the updated item for both.
       mockQueryResult = [{ id: 'txn-uuid', userId: 'user-1', amount: 10 }];
       const result = await service.update('txn-uuid', 'user-1', { amount: 10 });
+      expect(result).toBeDefined();
+    });
+
+    it('🟢 Happy Path: should update future installments in cascade mode', async () => {
+      mockQueryResult = [
+        { id: 'txn-1', recurrenceId: 'rec-1', installmentNumber: 3 },
+        { id: 'txn-2', recurrenceId: 'rec-1', installmentNumber: 4 }
+      ];
+
+      const result = await service.update('txn-1', 'user-1', {
+        amount: 2000,
+        date: new Date('2026-10-05T10:00:00Z').toISOString(),
+        updateFutureInstallments: true
+      });
+
+      expect(mockDb.transaction).toHaveBeenCalled();
       expect(result).toBeDefined();
     });
   });

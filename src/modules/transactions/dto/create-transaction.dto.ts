@@ -8,6 +8,7 @@ import {
   IsString,
   IsUUID,
   Min,
+  IsBoolean,
 } from 'class-validator';
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -65,4 +66,12 @@ export class CreateTransactionDto {
   @Min(1)
   @IsOptional()
   installments?: number;
+
+  @ApiPropertyOptional({
+    description: 'Se verdadeiro, projeta 24 transações mantendo o valor cheio, caracterizando uma assinatura sem fim',
+    example: true,
+  })
+  @IsBoolean()
+  @IsOptional()
+  isInfinite?: boolean;
 }
