@@ -11,6 +11,8 @@ import { AuthMiddleware } from './auth.middleware';
 })
 export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(AuthMiddleware).forRoutes('/api/auth/*');
+    // 'auth/*' matches /api/auth in Prod (due to setGlobalPrefix('api'))
+    // 'api/auth/*' matches /api/auth in E2E (where setGlobalPrefix is missing)
+    consumer.apply(AuthMiddleware).forRoutes('auth/*', 'api/auth/*');
   }
 }

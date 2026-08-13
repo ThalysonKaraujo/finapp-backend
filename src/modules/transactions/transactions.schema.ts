@@ -27,6 +27,9 @@ export const transactions = pgTable('transactions', {
   categoryId: text('category_id').references(() => categories.id, {
     onDelete: 'set null',
   }),
+  recurrenceId: text('recurrence_id'),
+  installmentNumber: integer('installment_number'),
+  totalInstallments: integer('total_installments'),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

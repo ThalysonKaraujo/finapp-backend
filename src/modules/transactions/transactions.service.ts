@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, count, desc, eq } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte } from 'drizzle-orm';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { transactions } from './transactions.schema';
@@ -25,15 +25,48 @@ export class TransactionsService {
       throw new BadRequestException('Invalid transaction type');
     }
 
-    const [transaction] = await this.db
+    const { installments, isInfinite, ...baseDto } = dto;
+    const numInstallments = isInfinite
+      ? 24
+      : installments && installments > 0
+        ? installments
+        : 1;
+
+    const transactionsToInsert: (typeof transactions.$inferInsert)[] = [];
+    const recurrenceId =
+      numInstallments > 1 || isInfinite ? crypto.randomUUID() : null;
+
+    const baseAmount = isInfinite
+      ? baseDto.amount
+      : Math.floor(baseDto.amount / numInstallments);
+    const remainder = isInfinite ? 0 : baseDto.amount % numInstallments;
+
+    for (let i = 1; i <= numInstallments; i++) {
+      const currentDate = new Date(baseDto.date);
+      currentDate.setMonth(currentDate.getMonth() + (i - 1));
+
+      const currentAmount = baseAmount + (i === 1 ? remainder : 0);
+
+      transactionsToInsert.push({
+        ...baseDto,
+        amount: currentAmount,
+        date: currentDate,
+        recurrenceId,
+        installmentNumber: numInstallments > 1 || isInfinite ? i : null,
+        totalInstallments: isInfinite
+          ? null
+          : numInstallments > 1
+            ? numInstallments
+            : null,
+      });
+    }
+
+    const inserted = await this.db
       .insert(transactions)
-      .values({
-        ...dto,
-        date: new Date(dto.date),
-      })
+      .values(transactionsToInsert)
       .returning();
 
-    return transaction;
+    return numInstallments > 1 ? inserted : inserted[0];
   }
 
   async findAll(userId: string, page = 1, limit = 20) {
@@ -80,21 +113,79 @@ export class TransactionsService {
   }
 
   async update(id: string, userId: string, dto: UpdateTransactionDto) {
-    await this.findOne(id, userId); // Ensure it exists and belongs to user
+    const targetTransaction = await this.findOne(id, userId); // Ensure it exists and belongs to user
 
-    const updateData: Record<string, unknown> = { ...dto };
-    if (dto.date) {
-      updateData.date = new Date(dto.date);
+    const { updateFutureInstallments, ...updateDataRaw } = dto;
+    const updateData: Record<string, unknown> = {
+      ...updateDataRaw,
+      updatedAt: new Date(),
+    };
+
+    if (
+      !updateFutureInstallments ||
+      !targetTransaction.recurrenceId ||
+      !targetTransaction.installmentNumber
+    ) {
+      // Normal single update
+      if (updateDataRaw.date) {
+        updateData.date = new Date(updateDataRaw.date);
+      }
+
+      const [updated] = await this.db
+        .update(transactions)
+        .set(updateData)
+        .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
+        .returning();
+
+      return updated;
     }
-    updateData.updatedAt = new Date();
 
-    const [updated] = await this.db
-      .update(transactions)
-      .set(updateData)
-      .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
-      .returning();
+    // Cascade Update: Find all future transactions in this recurrence
+    const futureTransactions = await this.db
+      .select()
+      .from(transactions)
+      .where(
+        and(
+          eq(transactions.recurrenceId, targetTransaction.recurrenceId),
+          gte(
+            transactions.installmentNumber,
+            targetTransaction.installmentNumber,
+          ),
+          eq(transactions.userId, userId),
+        ),
+      )
+      .orderBy(asc(transactions.installmentNumber));
 
-    return updated;
+    // We do multiple updates in a db transaction
+    const updatedTransactions = await this.db.transaction(async (tx) => {
+      const results: (typeof transactions.$inferSelect)[] = [];
+      for (let i = 0; i < futureTransactions.length; i++) {
+        const t = futureTransactions[i];
+        const tUpdateData: Record<string, unknown> = {
+          ...updateDataRaw,
+          updatedAt: new Date(),
+        };
+
+        if (updateDataRaw.date) {
+          const newDate = new Date(updateDataRaw.date);
+          // Advance the month incrementally starting from the chosen new date
+          newDate.setMonth(newDate.getMonth() + i);
+          tUpdateData.date = newDate;
+        }
+
+        const [updated] = await tx
+          .update(transactions)
+          .set(tUpdateData)
+          .where(eq(transactions.id, t.id))
+          .returning();
+
+        results.push(updated);
+      }
+      return results;
+    });
+
+    // Return the specific one the user clicked on (the first of the future ones)
+    return updatedTransactions[0];
   }
 
   async remove(id: string, userId: string) {

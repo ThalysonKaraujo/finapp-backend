@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsEnum,
   IsISO8601,
   IsInt,
@@ -7,6 +8,7 @@ import {
   IsPositive,
   IsString,
   IsUUID,
+  Min,
 } from 'class-validator';
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -49,10 +51,28 @@ export class CreateTransactionDto {
   walletId?: string;
 
   @ApiPropertyOptional({
-    example: 'uuid-category-123',
-    description: 'Optional category ID',
+    description: 'ID da Categoria',
+    example: 'uuid-da-categoria',
   })
-  @IsOptional()
   @IsString()
+  @IsOptional()
   categoryId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Quantidade de parcelas/meses (1 para transação única)',
+    example: 12,
+  })
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  installments?: number;
+
+  @ApiPropertyOptional({
+    description:
+      'Se verdadeiro, projeta 24 transações mantendo o valor cheio, caracterizando uma assinatura sem fim',
+    example: true,
+  })
+  @IsBoolean()
+  @IsOptional()
+  isInfinite?: boolean;
 }
