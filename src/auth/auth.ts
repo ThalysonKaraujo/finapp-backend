@@ -6,8 +6,12 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './auth.schema';
 
+import { Resend } from 'resend';
+
 const client = postgres(process.env.DATABASE_URL || '');
 const db = drizzle(client, { schema });
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -21,8 +25,21 @@ export const auth = betterAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
     },
   },
+  emailVerification: {
+    sendOnSignUp: true,
+    sendVerificationEmail: async ({ user, url, token }) => {
+      const customUrl = `http://localhost:3000/api/auth/verify?token=${token}`;
+      await resend.emails.send({
+        from: 'FinApp <onboarding@resend.dev>',
+        to: user.email,
+        subject: 'Confirme seu e-mail no FinApp',
+        html: `<p>Olá ${user.name},</p><p>Clique no link abaixo para verificar sua conta:</p><p><a href="${customUrl}">${customUrl}</a></p>`,
+      });
+    },
+  },
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: true,
   },
   trustedOrigins: ['http://localhost:3000', 'exp://*', 'app://*'],
   rateLimit: {
