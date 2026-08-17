@@ -7,6 +7,8 @@ import { wallets } from '../wallets/wallets.schema';
 export const transactionTypeEnum = pgEnum('transaction_type', [
   'INCOME',
   'EXPENSE',
+  'TRANSFER_IN',
+  'TRANSFER_OUT',
 ]);
 
 export const transactions = pgTable('transactions', {
@@ -30,6 +32,7 @@ export const transactions = pgTable('transactions', {
   recurrenceId: text('recurrence_id'),
   installmentNumber: integer('installment_number'),
   totalInstallments: integer('total_installments'),
+  linkedTransactionId: text('linked_transaction_id'),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

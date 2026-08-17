@@ -194,6 +194,45 @@ describe('TransactionsService', () => {
     });
   });
 
+  describe('transfer', () => {
+    it('🔴 Sad Path: should throw BadRequestException if source and destination are the same', async () => {
+      const dto = {
+        amount: 100,
+        title: 'Transfer',
+        date: new Date().toISOString(),
+        sourceWalletId: 'wallet-1',
+        destinationWalletId: 'wallet-1',
+      };
+
+      await expect(service.transfer('user-1', dto as any)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('🟢 Happy Path: should transfer money and link transactions', async () => {
+      const dto = {
+        amount: 5000,
+        title: 'Pix',
+        date: new Date().toISOString(),
+        sourceWalletId: 'wallet-src',
+        destinationWalletId: 'wallet-dest',
+      };
+
+      // Mock sequence for transaction cb
+      mockQueryResult = [{ id: 'trans-out-1' }]; // mocked return for inserts
+      
+      const result = await service.transfer('user-1', dto as any);
+      
+      expect(mockDb.transaction).toHaveBeenCalled();
+      // Since our transaction mock simply invokes the callback with mockDb:
+      expect(mockDb.insert).toHaveBeenCalled();
+      expect(mockDb.update).toHaveBeenCalled();
+      
+      expect(result).toHaveProperty('transferOut');
+      expect(result).toHaveProperty('transferIn');
+    });
+  });
+
   describe('findAll', () => {
     it('🟢 Happy Path: should return transactions with pagination', async () => {
       mockQueryResult = [{ id: '1', total: 10 }];
@@ -262,6 +301,14 @@ describe('TransactionsService', () => {
       mockQueryResult = [{ id: 'txn-uuid', userId: 'user-1' }];
       const result = await service.remove('txn-uuid', 'user-1');
       expect(result).toBeDefined();
+    });
+
+    it('🟢 Happy Path: should also remove linked transaction if exists', async () => {
+      mockQueryResult = [{ id: 'txn-1', userId: 'user-1', linkedTransactionId: 'txn-2' }];
+      await service.remove('txn-1', 'user-1');
+      
+      // Called twice: once for the main transaction, once for the linked one
+      expect(mockDb.delete).toHaveBeenCalledTimes(2);
     });
   });
 });
