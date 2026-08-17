@@ -11,6 +11,8 @@ describe('TransactionsModule (e2e)', () => {
   let db: any;
   let authToken: string;
   let testUserId: string;
+  let walletAId: string;
+  let walletBId: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -39,7 +41,10 @@ describe('TransactionsModule (e2e)', () => {
       password,
     });
 
-    await db.update(user).set({ emailVerified: true }).where(eq(user.email, randomEmail));
+    await db
+      .update(user)
+      .set({ emailVerified: true })
+      .where(eq(user.email, randomEmail));
 
     const signInRes = await request(app.getHttpServer())
       .post('/api/auth/sign-in/email')
@@ -47,6 +52,18 @@ describe('TransactionsModule (e2e)', () => {
 
     authToken = signInRes.body.token || signInRes.body.session?.token; // Depende da versão do plugin bearer
     testUserId = signInRes.body.user.id;
+
+    const walletARes = await request(app.getHttpServer())
+      .post('/wallets')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ name: 'Nubank' });
+    walletAId = walletARes.body.id;
+
+    const walletBRes = await request(app.getHttpServer())
+      .post('/wallets')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ name: 'Itau' });
+    walletBId = walletBRes.body.id;
   });
 
   afterAll(async () => {
@@ -128,6 +145,72 @@ describe('TransactionsModule (e2e)', () => {
 
       // ValidationPipe deve barrar
       expect([400, 500]).toContain(response.status);
+    });
+  });
+
+  describe('/transactions/transfer (POST)', () => {
+    let transferOutId: string;
+    let transferInId: string;
+
+    it('🔴 Sad Path: should return 400 when source and destination are the same', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/transactions/transfer')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          amount: 1000,
+          title: 'Transfer',
+          date: new Date().toISOString(),
+          sourceWalletId: 'same-wallet',
+          destinationWalletId: 'same-wallet',
+        });
+
+      expect([400, 500]).toContain(response.status);
+    });
+
+    it('🟢 Happy Path: should create transfer successfully', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/transactions/transfer')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          amount: 5000,
+          title: 'Nubank para Itaú',
+          date: new Date().toISOString(),
+          sourceWalletId: walletAId,
+          destinationWalletId: walletBId,
+        });
+
+      expect(response.status).toBe(201);
+      expect(response.body).toHaveProperty('transferOut');
+      expect(response.body).toHaveProperty('transferIn');
+
+      expect(response.body.transferOut.type).toBe('TRANSFER_OUT');
+      expect(response.body.transferIn.type).toBe('TRANSFER_IN');
+
+      // Assert they are linked
+      expect(response.body.transferOut.linkedTransactionId).toBe(
+        response.body.transferIn.id,
+      );
+      expect(response.body.transferIn.linkedTransactionId).toBe(
+        response.body.transferOut.id,
+      );
+
+      transferOutId = response.body.transferOut.id;
+      transferInId = response.body.transferIn.id;
+    });
+
+    it('🟢 Happy Path: deleting one side of transfer should delete the other', async () => {
+      const delResponse = await request(app.getHttpServer())
+        .delete(`/transactions/${transferOutId}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(delResponse.status).toBe(200);
+
+      // Verify if transferIn is also deleted
+      const checkResponse = await request(app.getHttpServer())
+        .get(`/transactions/${transferInId}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(checkResponse.status).toBe(404);
     });
   });
 });
