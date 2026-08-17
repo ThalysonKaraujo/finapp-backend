@@ -21,8 +21,16 @@ export const auth = betterAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
     },
   },
+  emailVerification: {
+    sendOnSignUp: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      // TODO: Implementar envio real de e-mail (Resend, AWS SES, etc)
+      console.log(`[Email Mock] Enviando e-mail para ${user.email} com o link: ${url}`);
+    },
+  },
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: true,
   },
   trustedOrigins: ['http://localhost:3000', 'exp://*', 'app://*'],
   rateLimit: {
