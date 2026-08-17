@@ -17,8 +17,9 @@ O **FinApp Backend** é o motor que alimenta um ecossistema financeiro. Constru�
 - ⚡ **Alta Performance (Redis):** Sessões em cache no Redis (com token _hashed_ via SHA-256) evitando viagens desnecessárias ao banco de dados no `AuthGuard`.
 - 💼 **Gestão de Carteiras (Wallets):** Gerencie de onde o dinheiro entra e sai.
 - 🏷️ **Categorização de Gastos:** Rotule as despesas/receitas com customização de cores e ícones.
-- 💳 **Transações Paginas:** Registro de despesas/receitas com estrutura de **Paginação (Metadata e Count simultâneo)** visando performance (`LIMIT/OFFSET`). Valores sempre trafegam em **centavos**.
-- 🎯 **Metas e Orçamentos (Goals):** Defina o limite de gastos em % para cada categoria impedindo metas logicamente inválidas (soma > 100%).
+- 💳 **Transações Paginadas:** Registro de despesas/receitas com estrutura de **Paginação (Metadata e Count simultâneo)** visando performance (`LIMIT/OFFSET`). Valores sempre trafegam em **centavos**.
+- 🎯 **Orçamentos (Budgets):** Defina o limite de gastos em % para cada categoria, impedindo alocações logicamente inválidas (soma > 100%).
+- 🏦 **Objetivos Financeiros (Objectives):** Separação lógica de saldos para metas de poupança do usuário (ex: Comprar um carro, Viagem), com controle de depósito e saque focado em acompanhamento de progresso.
 - 📊 **Relatórios Otimizados:** O endpoint mensal processa complexas agregações e métricas (`Ideal vs Real`) nativamente no Postgres via `json_agg`, poupando CPU do Frontend.
 - 📚 **Documentação Automática:** Swagger/OpenAPI configurado e rodando em `/api/docs`.
 
