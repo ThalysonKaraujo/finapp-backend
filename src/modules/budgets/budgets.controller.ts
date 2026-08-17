@@ -11,46 +11,46 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthGuard } from '../../common/guards/auth.guard';
-import { CreateGoalDto } from './dto/create-goal.dto';
-import { UpdateGoalDto } from './dto/update-goal.dto';
-import { GoalsService } from './goals.service';
+import { CreateBudgetDto } from './dto/create-budget.dto';
+import { UpdateBudgetDto } from './dto/update-budget.dto';
+import { BudgetsService } from './budgets.service';
 
-@ApiTags('Goals')
+@ApiTags('Budgets')
 @ApiBearerAuth()
 @UseGuards(AuthGuard)
-@Controller('goals')
-export class GoalsController {
-  constructor(private readonly goalsService: GoalsService) {}
+@Controller('budgets')
+export class BudgetsController {
+  constructor(private readonly budgetsService: BudgetsService) {}
 
   @Post()
   create(
-    @Body() createGoalDto: CreateGoalDto,
+    @Body() createBudgetDto: CreateBudgetDto,
     @CurrentUser('id') userId: string,
   ) {
-    return this.goalsService.create(createGoalDto, userId);
+    return this.budgetsService.create(createBudgetDto, userId);
   }
 
   @Get()
   findAll(@CurrentUser('id') userId: string) {
-    return this.goalsService.findAll(userId);
+    return this.budgetsService.findAll(userId);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string, @CurrentUser('id') userId: string) {
-    return this.goalsService.findOne(id, userId);
+    return this.budgetsService.findOne(id, userId);
   }
 
   @Put(':id')
   update(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
-    @Body() updateGoalDto: UpdateGoalDto,
+    @Body() updateBudgetDto: UpdateBudgetDto,
   ) {
-    return this.goalsService.update(id, userId, updateGoalDto);
+    return this.budgetsService.update(id, userId, updateBudgetDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string, @CurrentUser('id') userId: string) {
-    return this.goalsService.remove(id, userId);
+    return this.budgetsService.remove(id, userId);
   }
 }

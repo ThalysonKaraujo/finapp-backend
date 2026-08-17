@@ -1,10 +1,10 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { GoalsService } from '../goals.service';
+import { BudgetsService } from '../budgets.service';
 
-describe('GoalsService', () => {
-  let service: GoalsService;
+describe('BudgetsService', () => {
+  let service: BudgetsService;
   let mockQueryResult: any = [];
   let mockSumResult: any = [];
 
@@ -41,7 +41,7 @@ describe('GoalsService', () => {
     mockSumResult = [{ totalPercentage: 0 }];
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        GoalsService,
+        BudgetsService,
         {
           provide: 'PG_CONNECTION',
           useValue: mockDb,
@@ -49,7 +49,7 @@ describe('GoalsService', () => {
       ],
     }).compile();
 
-    service = module.get<GoalsService>(GoalsService);
+    service = module.get<BudgetsService>(BudgetsService);
     vi.clearAllMocks();
   });
 
@@ -68,10 +68,10 @@ describe('GoalsService', () => {
       );
     });
 
-    it('🔴 Sad Path: should throw BadRequestException if category already has a goal', async () => {
+    it('🔴 Sad Path: should throw BadRequestException if category already has a budget', async () => {
       mockSumResult = [{ totalPercentage: 50 }];
-      // mock raw query for checking existing goal
-      mockQueryResult = [{ id: 'goal-1' }];
+      // mock raw query for checking existing budget
+      mockQueryResult = [{ id: 'budget-1' }];
 
       const dto = { categoryId: 'cat-1', percentage: 30 };
 
@@ -80,22 +80,22 @@ describe('GoalsService', () => {
       );
     });
 
-    it('🟢 Happy Path: should create a goal successfully if under 100%', async () => {
+    it('🟢 Happy Path: should create a budget successfully if under 100%', async () => {
       mockSumResult = [{ totalPercentage: 70 }];
-      mockQueryResult = []; // Category has no goal yet
+      mockQueryResult = []; // Category has no budget yet
 
       const dto = { categoryId: 'cat-1', percentage: 30 };
 
-      // Override insert chain to return the new goal
+      // Override insert chain to return the new budget
       mockDb.insert.mockReturnValueOnce({
         values: vi.fn().mockReturnThis(),
-        returning: vi.fn().mockResolvedValue([{ id: 'goal-uuid', ...dto }]),
+        returning: vi.fn().mockResolvedValue([{ id: 'budget-uuid', ...dto }]),
       });
 
       const result = await service.create(dto, 'user-1');
 
       expect(result).toBeDefined();
-      expect(result.id).toBe('goal-uuid');
+      expect(result.id).toBe('budget-uuid');
     });
   });
 
@@ -103,19 +103,19 @@ describe('GoalsService', () => {
     it('🔴 Sad Path: should throw BadRequestException if update exceeds 100%', async () => {
       mockSumResult = [{ totalPercentage: 90 }]; // Total is 90
 
-      // Original goal is 20, they want to change to 40 (Net +20, new total 110%)
-      mockQueryResult = [{ id: 'goal-1', percentage: 20 }];
+      // Original budget is 20, they want to change to 40 (Net +20, new total 110%)
+      mockQueryResult = [{ id: 'budget-1', percentage: 20 }];
 
       const dto = { categoryId: 'cat-1', percentage: 40 };
 
-      await expect(service.update('goal-1', 'user-1', dto)).rejects.toThrow(
+      await expect(service.update('budget-1', 'user-1', dto)).rejects.toThrow(
         BadRequestException,
       );
     });
 
     it('🟢 Happy Path: should update if within 100% limit', async () => {
       mockSumResult = [{ totalPercentage: 90 }];
-      mockQueryResult = [{ id: 'goal-1', percentage: 20 }];
+      mockQueryResult = [{ id: 'budget-1', percentage: 20 }];
 
       const dto = { percentage: 30 }; // Net +10, new total 100%
 
@@ -124,10 +124,10 @@ describe('GoalsService', () => {
         where: vi.fn().mockReturnThis(),
         returning: vi
           .fn()
-          .mockResolvedValue([{ id: 'goal-1', percentage: 30 }]),
+          .mockResolvedValue([{ id: 'budget-1', percentage: 30 }]),
       });
 
-      const result = await service.update('goal-1', 'user-1', dto);
+      const result = await service.update('budget-1', 'user-1', dto);
 
       expect(result).toBeDefined();
       expect(result.percentage).toBe(30);
