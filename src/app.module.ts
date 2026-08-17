@@ -4,7 +4,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { SentryModule } from '@sentry/nestjs/setup';
-import { SentryGlobalFilter } from '@sentry/nestjs/setup';
 import { redisStore } from 'cache-manager-redis-yet';
 import { LoggerModule } from 'nestjs-pino';
 import { AppController } from './app.controller';
@@ -62,7 +61,7 @@ import { WalletsModule } from './modules/wallets/wallets.module';
     AppService,
     {
       provide: APP_GUARD,
-      useClass: SentryGlobalFilter,
+      useClass: ThrottlerGuard,
     },
     {
       provide: APP_FILTER,
