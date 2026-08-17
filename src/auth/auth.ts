@@ -28,6 +28,10 @@ export const auth = betterAuth({
   emailVerification: {
     sendOnSignUp: true,
     sendVerificationEmail: async ({ user, url, token }) => {
+      if (process.env.NODE_ENV === 'test') {
+        return;
+      }
+
       const customUrl = `http://localhost:3000/api/auth/verify?token=${token}`;
       await resend.emails.send({
         from: 'FinApp <onboarding@resend.dev>',
