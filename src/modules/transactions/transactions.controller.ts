@@ -13,6 +13,7 @@ import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
+import { TransferTransactionDto } from './dto/transfer-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { TransactionsService } from './transactions.service';
 
@@ -32,6 +33,14 @@ export class TransactionsController {
       ...createTransactionDto,
       userId,
     });
+  }
+
+  @Post('transfer')
+  transfer(
+    @Body() transferTransactionDto: TransferTransactionDto,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.transactionsService.transfer(userId, transferTransactionDto);
   }
 
   @Get()

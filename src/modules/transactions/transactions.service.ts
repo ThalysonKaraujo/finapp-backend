@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { and, asc, count, desc, eq, gte } from 'drizzle-orm';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
+import { TransferTransactionDto } from './dto/transfer-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { transactions } from './transactions.schema';
 
@@ -67,6 +68,56 @@ export class TransactionsService {
       .returning();
 
     return numInstallments > 1 ? inserted : inserted[0];
+  }
+
+  async transfer(userId: string, dto: TransferTransactionDto) {
+    if (dto.sourceWalletId === dto.destinationWalletId) {
+      throw new BadRequestException('Source and destination wallets must be different');
+    }
+
+    const { amount, sourceWalletId, destinationWalletId, date, title } = dto;
+    const transferDate = new Date(date);
+
+    const result = await this.db.transaction(async (tx) => {
+      // Create TRANSFER_OUT
+      const [transferOut] = await tx
+        .insert(transactions)
+        .values({
+          userId,
+          amount,
+          type: 'TRANSFER_OUT',
+          title,
+          date: transferDate,
+          walletId: sourceWalletId,
+        })
+        .returning();
+
+      // Create TRANSFER_IN
+      const [transferIn] = await tx
+        .insert(transactions)
+        .values({
+          userId,
+          amount,
+          type: 'TRANSFER_IN',
+          title,
+          date: transferDate,
+          walletId: destinationWalletId,
+          linkedTransactionId: transferOut.id,
+        })
+        .returning();
+
+      // Update TRANSFER_OUT to point to TRANSFER_IN
+      await tx
+        .update(transactions)
+        .set({ linkedTransactionId: transferIn.id })
+        .where(eq(transactions.id, transferOut.id));
+
+      transferOut.linkedTransactionId = transferIn.id;
+
+      return { transferOut, transferIn };
+    });
+
+    return result;
   }
 
   async findAll(userId: string, page = 1, limit = 20) {
@@ -189,12 +240,18 @@ export class TransactionsService {
   }
 
   async remove(id: string, userId: string) {
-    await this.findOne(id, userId); // Ensure it exists and belongs to user
+    const transaction = await this.findOne(id, userId); // Ensure it exists and belongs to user
 
     const [removed] = await this.db
       .delete(transactions)
       .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
       .returning();
+
+    if (transaction.linkedTransactionId) {
+      await this.db
+        .delete(transactions)
+        .where(and(eq(transactions.id, transaction.linkedTransactionId), eq(transactions.userId, userId)));
+    }
 
     return removed;
   }
