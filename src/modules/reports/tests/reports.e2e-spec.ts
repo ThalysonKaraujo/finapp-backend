@@ -54,14 +54,14 @@ describe('ReportsModule (e2e)', () => {
       .send({ name: 'Transporte', color: '#00FF00' });
     const cat2 = cat2Res.body.id;
 
-    // 3. Setup Data (Goals)
+    // 3. Setup Data (Budgets)
     await request(app.getHttpServer())
-      .post('/goals')
+      .post('/budgets')
       .set('Authorization', `Bearer ${authToken}`)
       .send({ categoryId: cat1, percentage: 30 });
 
     await request(app.getHttpServer())
-      .post('/goals')
+      .post('/budgets')
       .set('Authorization', `Bearer ${authToken}`)
       .send({ categoryId: cat2, percentage: 15 });
 
@@ -169,20 +169,20 @@ describe('ReportsModule (e2e)', () => {
       expect(transporte.total).toBe(10000);
     });
 
-    it('🟢 Happy Path: should return goals for ideal distribution', async () => {
+    it('🟢 Happy Path: should return budgets for ideal distribution', async () => {
       const res = await request(app.getHttpServer())
         .get('/reports/monthly?month=8&year=2026')
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.status).toBe(200);
 
-      const goals = res.body.goals;
-      expect(Array.isArray(goals)).toBe(true);
-      expect(goals.length).toBe(2);
+      const budgets = res.body.budgets;
+      expect(Array.isArray(budgets)).toBe(true);
+      expect(budgets.length).toBe(2);
 
-      const alimentacaoGoal = goals.find((g: any) => g.name === 'Alimentação');
-      expect(alimentacaoGoal.percentage).toBe(30);
-      expect(alimentacaoGoal.color).toBe('#FF0000');
+      const alimentacaoBudget = budgets.find((g: any) => g.name === 'Alimentação');
+      expect(alimentacaoBudget.percentage).toBe(30);
+      expect(alimentacaoBudget.color).toBe('#FF0000');
     });
 
     it('🟢 Happy Path: should return zeros for a month with no data', async () => {

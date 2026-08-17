@@ -5,12 +5,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { and, eq, sql } from 'drizzle-orm';
-import { CreateGoalDto } from './dto/create-goal.dto';
-import { UpdateGoalDto } from './dto/update-goal.dto';
-import { goals } from './goals.schema';
+import { CreateBudgetDto } from './dto/create-budget.dto';
+import { UpdateBudgetDto } from './dto/update-budget.dto';
+import { budgets } from './budgets.schema';
 
 @Injectable()
-export class GoalsService {
+export class BudgetsService {
   constructor(
     @Inject('PG_CONNECTION')
     private readonly db: any,
@@ -18,32 +18,32 @@ export class GoalsService {
 
   private async getTotalPercentage(userId: string): Promise<number> {
     const result = await this.db.execute(
-      sql`SELECT COALESCE(SUM(percentage), 0) as "totalPercentage" FROM goals WHERE user_id = ${userId}`,
+      sql`SELECT COALESCE(SUM(percentage), 0) as "totalPercentage" FROM budgets WHERE user_id = ${userId}`,
     );
     return Number(result[0]?.totalPercentage || 0);
   }
 
-  async create(dto: CreateGoalDto, userId: string) {
+  async create(dto: CreateBudgetDto, userId: string) {
     const total = await this.getTotalPercentage(userId);
     if (total + dto.percentage > 100) {
       throw new BadRequestException(
-        `Cannot create goal. Total percentage would exceed 100%. Current total: ${total}%`,
+        `Cannot create budget. Total percentage would exceed 100%. Current total: ${total}%`,
       );
     }
 
     const existing = await this.db
       .select()
-      .from(goals)
+      .from(budgets)
       .where(
-        and(eq(goals.userId, userId), eq(goals.categoryId, dto.categoryId)),
+        and(eq(budgets.userId, userId), eq(budgets.categoryId, dto.categoryId)),
       );
 
     if (existing && existing.length > 0) {
-      throw new BadRequestException('A goal for this category already exists.');
+      throw new BadRequestException('A budget for this category already exists.');
     }
 
-    const [goal] = await this.db
-      .insert(goals)
+    const [budget] = await this.db
+      .insert(budgets)
       .values({
         percentage: dto.percentage,
         userId: userId,
@@ -51,39 +51,39 @@ export class GoalsService {
       })
       .returning();
 
-    return goal;
+    return budget;
   }
 
   async findAll(userId: string) {
-    return this.db.select().from(goals).where(eq(goals.userId, userId));
+    return this.db.select().from(budgets).where(eq(budgets.userId, userId));
   }
 
   async findOne(id: string, userId: string) {
-    const [goal] = await this.db
+    const [budget] = await this.db
       .select()
-      .from(goals)
-      .where(and(eq(goals.id, id), eq(goals.userId, userId)));
+      .from(budgets)
+      .where(and(eq(budgets.id, id), eq(budgets.userId, userId)));
 
-    if (!goal) {
-      throw new NotFoundException('Goal not found or unauthorized');
+    if (!budget) {
+      throw new NotFoundException('Budget not found or unauthorized');
     }
 
-    return goal;
+    return budget;
   }
 
-  async update(id: string, userId: string, dto: UpdateGoalDto) {
-    const currentGoal = await this.findOne(id, userId);
+  async update(id: string, userId: string, dto: UpdateBudgetDto) {
+    const currentBudget = await this.findOne(id, userId);
 
     if (
       dto.percentage !== undefined &&
-      dto.percentage !== currentGoal.percentage
+      dto.percentage !== currentBudget.percentage
     ) {
       const total = await this.getTotalPercentage(userId);
-      const netDifference = dto.percentage - currentGoal.percentage;
+      const netDifference = dto.percentage - currentBudget.percentage;
 
       if (total + netDifference > 100) {
         throw new BadRequestException(
-          `Cannot update goal. Total percentage would exceed 100%. Current total: ${total}%`,
+          `Cannot update budget. Total percentage would exceed 100%. Current total: ${total}%`,
         );
       }
     }
@@ -92,9 +92,9 @@ export class GoalsService {
     updateData.updatedAt = new Date();
 
     const [updated] = await this.db
-      .update(goals)
+      .update(budgets)
       .set(updateData)
-      .where(and(eq(goals.id, id), eq(goals.userId, userId)))
+      .where(and(eq(budgets.id, id), eq(budgets.userId, userId)))
       .returning();
 
     return updated;
@@ -104,8 +104,8 @@ export class GoalsService {
     await this.findOne(id, userId);
 
     const [removed] = await this.db
-      .delete(goals)
-      .where(and(eq(goals.id, id), eq(goals.userId, userId)))
+      .delete(budgets)
+      .where(and(eq(budgets.id, id), eq(budgets.userId, userId)))
       .returning();
 
     return removed;

@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsInt, IsNotEmpty, IsString, Max, Min } from 'class-validator';
 
-export class CreateGoalDto {
+export class CreateBudgetDto {
   @ApiProperty({ example: 'uuid-category-123', description: 'Category ID' })
   @IsString()
   @IsNotEmpty()

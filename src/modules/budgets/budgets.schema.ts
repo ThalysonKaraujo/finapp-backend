@@ -2,8 +2,8 @@ import { integer, pgTable, text, timestamp, unique } from 'drizzle-orm/pg-core';
 import { user } from '../../auth/auth.schema';
 import { categories } from '../categories/categories.schema';
 
-export const goals = pgTable(
-  'goals',
+export const budgets = pgTable(
+  'budgets',
   {
     id: text('id')
       .primaryKey()
@@ -21,7 +21,7 @@ export const goals = pgTable(
       .$onUpdate(() => new Date()),
   },
   (table) => ({
-    // A user can only have one goal per category
+    // A user can only have one budget per category
     userCategoryUnique: unique().on(table.userId, table.categoryId),
   }),
 );

@@ -9,7 +9,7 @@ export class ReportsService {
   ) {}
 
   async getMonthlySummary(userId: string, month: number, year: number) {
-    const [result, goalsResult] = await Promise.all([
+    const [result, budgetsResult] = await Promise.all([
       this.db.execute(sql`
         SELECT 
           COALESCE(SUM(CASE WHEN type = 'INCOME' THEN amount ELSE 0 END), 0) as incomes,
@@ -50,7 +50,7 @@ export class ReportsService {
           c.name,
           c.color,
           g.percentage
-        FROM goals g
+        FROM budgets g
         JOIN categories c ON c.id = g.category_id
         WHERE g.user_id = ${userId}
       `),
@@ -68,7 +68,7 @@ export class ReportsService {
         : row.expensesByCategory || []
       : [];
 
-    const goals = (goalsResult || []).map((g: any) => ({
+    const budgets = (budgetsResult || []).map((g: any) => ({
       categoryId: g.categoryId,
       name: g.name,
       color: g.color,
@@ -83,7 +83,7 @@ export class ReportsService {
         ...cat,
         total: Number(cat.total || 0),
       })),
-      goals,
+      budgets,
     };
   }
 }

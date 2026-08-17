@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../../../app.module';
 import { user } from '../../../auth/auth.schema';
 
-describe('GoalsModule (e2e)', () => {
+describe('BudgetsModule (e2e)', () => {
   let app: INestApplication;
   let db: any;
   let authToken: string;
@@ -23,11 +23,11 @@ describe('GoalsModule (e2e)', () => {
     await app.init();
     db = app.get('PG_CONNECTION');
 
-    const randomEmail = `test-goal-${Date.now()}@example.com`;
+    const randomEmail = `test-budget-${Date.now()}@example.com`;
     const password = 'password123';
 
     await request(app.getHttpServer()).post('/api/auth/sign-up/email').send({
-      name: 'Goal E2E User',
+      name: 'Budget E2E User',
       email: randomEmail,
       password,
     });
@@ -55,36 +55,36 @@ describe('GoalsModule (e2e)', () => {
     await app.close();
   });
 
-  let createdGoalId: string;
+  let createdBudgetId: string;
 
-  describe('/goals (POST)', () => {
+  describe('/budgets (POST)', () => {
     it('🔴 Sad Path: should fail if category is not provided', async () => {
       const res = await request(app.getHttpServer())
-        .post('/goals')
+        .post('/budgets')
         .set('Authorization', `Bearer ${authToken}`)
         .send({ percentage: 30 });
       expect(res.status).toBe(400);
     });
 
-    it('🟢 Happy Path: should create a goal', async () => {
+    it('🟢 Happy Path: should create a budget', async () => {
       const res = await request(app.getHttpServer())
-        .post('/goals')
+        .post('/budgets')
         .set('Authorization', `Bearer ${authToken}`)
         .send({ categoryId: cat1, percentage: 80 });
 
       expect(res.status).toBe(201);
       expect(res.body.percentage).toBe(80);
-      createdGoalId = res.body.id;
+      createdBudgetId = res.body.id;
     });
 
-    it('🔴 Sad Path: should prevent creating another goal that exceeds 100%', async () => {
+    it('🔴 Sad Path: should prevent creating another budget that exceeds 100%', async () => {
       const cat2Res = await request(app.getHttpServer())
         .post('/categories')
         .set('Authorization', `Bearer ${authToken}`)
         .send({ name: 'Lazer', color: '#0000FF' });
 
       const res = await request(app.getHttpServer())
-        .post('/goals')
+        .post('/budgets')
         .set('Authorization', `Bearer ${authToken}`)
         .send({ categoryId: cat2Res.body.id, percentage: 30 }); // 80 + 30 = 110
 
@@ -92,10 +92,10 @@ describe('GoalsModule (e2e)', () => {
     });
   });
 
-  describe('/goals (GET)', () => {
-    it('🟢 Happy Path: should return list of goals', async () => {
+  describe('/budgets (GET)', () => {
+    it('🟢 Happy Path: should return list of budgets', async () => {
       const res = await request(app.getHttpServer())
-        .get('/goals')
+        .get('/budgets')
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.status).toBe(200);
@@ -104,19 +104,19 @@ describe('GoalsModule (e2e)', () => {
     });
   });
 
-  describe('/goals/:id (PUT)', () => {
+  describe('/budgets/:id (PUT)', () => {
     it('🔴 Sad Path: should prevent updating if it exceeds 100%', async () => {
       const res = await request(app.getHttpServer())
-        .put(`/goals/${createdGoalId}`)
+        .put(`/budgets/${createdBudgetId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({ percentage: 110 });
 
       expect(res.status).toBe(400);
     });
 
-    it('🟢 Happy Path: should update the goal', async () => {
+    it('🟢 Happy Path: should update the budget', async () => {
       const res = await request(app.getHttpServer())
-        .put(`/goals/${createdGoalId}`)
+        .put(`/budgets/${createdBudgetId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({ percentage: 90 }); // Updating 80 to 90 is fine (total 90)
 
@@ -125,10 +125,10 @@ describe('GoalsModule (e2e)', () => {
     });
   });
 
-  describe('/goals/:id (DELETE)', () => {
-    it('🟢 Happy Path: should delete the goal', async () => {
+  describe('/budgets/:id (DELETE)', () => {
+    it('🟢 Happy Path: should delete the budget', async () => {
       const res = await request(app.getHttpServer())
-        .delete(`/goals/${createdGoalId}`)
+        .delete(`/budgets/${createdBudgetId}`)
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.status).toBe(200);
