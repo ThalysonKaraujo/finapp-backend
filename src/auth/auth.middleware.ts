@@ -8,7 +8,17 @@ export class AuthMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
     // NestJS strips the global prefix '/api' from req.url
     // Better Auth relies on the full URL to match routes, so we restore it
-    req.url = req.originalUrl;
+    if (req.method === 'GET' && req.originalUrl.includes('/verify-email')) {
+      const token = req.query.token as string;
+      return res.redirect(`/api/auth/verify?token=${token}`);
+    }
+
+    const protocol = req.protocol || 'http';
+    const host = req.get('host');
+    const query = new URLSearchParams(req.query as any).toString();
+    const basePath = req.originalUrl.split('?')[0];
+    req.url = `${protocol}://${host}${basePath}${query ? `?${query}` : ''}`;
+    
     const handler = toNodeHandler(auth);
     return handler(req, res);
   }
