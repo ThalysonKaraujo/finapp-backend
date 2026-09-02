@@ -28,6 +28,7 @@ describe('WalletsService', () => {
     select: vi.fn().mockReturnValue(mockChain),
     update: vi.fn().mockReturnValue(mockChain),
     delete: vi.fn().mockReturnValue(mockChain),
+    execute: vi.fn().mockImplementation(() => Promise.resolve(mockQueryResult)),
   };
 
   beforeEach(async () => {
