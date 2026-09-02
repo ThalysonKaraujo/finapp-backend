@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { and, asc, count, desc, eq, gte, sql } from 'drizzle-orm';
+import { categories } from '../categories/categories.schema';
 import { wallets } from '../wallets/wallets.schema';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { TransferTransactionDto } from './dto/transfer-transaction.dto';
@@ -165,10 +166,31 @@ export class TransactionsService {
   async findAll(userId: string, page = 1, limit = 20) {
     const offset = (page - 1) * limit;
 
-    const [data, [{ total }]] = await Promise.all([
+    const [rawData, [{ total }]] = await Promise.all([
       this.db
-        .select()
+        .select({
+          id: transactions.id,
+          amount: transactions.amount,
+          type: transactions.type,
+          title: transactions.title,
+          date: transactions.date,
+          userId: transactions.userId,
+          walletId: transactions.walletId,
+          categoryId: transactions.categoryId,
+          recurrenceId: transactions.recurrenceId,
+          installmentNumber: transactions.installmentNumber,
+          totalInstallments: transactions.totalInstallments,
+          linkedTransactionId: transactions.linkedTransactionId,
+          createdAt: transactions.createdAt,
+          updatedAt: transactions.updatedAt,
+          categoryName: categories.name,
+          categoryColor: categories.color,
+          categoryIcon: categories.icon,
+          walletName: wallets.name,
+        })
         .from(transactions)
+        .leftJoin(categories, eq(transactions.categoryId, categories.id))
+        .leftJoin(wallets, eq(transactions.walletId, wallets.id))
         .where(eq(transactions.userId, userId))
         .orderBy(desc(transactions.date))
         .limit(limit)
@@ -178,6 +200,24 @@ export class TransactionsService {
         .from(transactions)
         .where(eq(transactions.userId, userId)),
     ]);
+
+    const data = (rawData || []).map((t: any) => ({
+      ...t,
+      category: t.categoryId
+        ? {
+            id: t.categoryId,
+            name: t.categoryName,
+            color: t.categoryColor,
+            icon: t.categoryIcon,
+          }
+        : null,
+      wallet: t.walletId
+        ? {
+            id: t.walletId,
+            name: t.walletName,
+          }
+        : null,
+    }));
 
     const totalPages = Math.ceil(Number(total) / limit);
 
@@ -193,16 +233,53 @@ export class TransactionsService {
   }
 
   async findOne(id: string, userId: string) {
-    const [transaction] = await this.db
-      .select()
+    const [raw] = await this.db
+      .select({
+        id: transactions.id,
+        amount: transactions.amount,
+        type: transactions.type,
+        title: transactions.title,
+        date: transactions.date,
+        userId: transactions.userId,
+        walletId: transactions.walletId,
+        categoryId: transactions.categoryId,
+        recurrenceId: transactions.recurrenceId,
+        installmentNumber: transactions.installmentNumber,
+        totalInstallments: transactions.totalInstallments,
+        linkedTransactionId: transactions.linkedTransactionId,
+        createdAt: transactions.createdAt,
+        updatedAt: transactions.updatedAt,
+        categoryName: categories.name,
+        categoryColor: categories.color,
+        categoryIcon: categories.icon,
+        walletName: wallets.name,
+      })
       .from(transactions)
+      .leftJoin(categories, eq(transactions.categoryId, categories.id))
+      .leftJoin(wallets, eq(transactions.walletId, wallets.id))
       .where(and(eq(transactions.id, id), eq(transactions.userId, userId)));
 
-    if (!transaction) {
+    if (!raw) {
       throw new NotFoundException('Transaction not found or unauthorized');
     }
 
-    return transaction;
+    return {
+      ...raw,
+      category: raw.categoryId
+        ? {
+            id: raw.categoryId,
+            name: raw.categoryName,
+            color: raw.categoryColor,
+            icon: raw.categoryIcon,
+          }
+        : null,
+      wallet: raw.walletId
+        ? {
+            id: raw.walletId,
+            name: raw.walletName,
+          }
+        : null,
+    };
   }
 
   async update(id: string, userId: string, dto: UpdateTransactionDto) {
