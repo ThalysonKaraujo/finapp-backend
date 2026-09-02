@@ -4,7 +4,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, asc, count, desc, eq, gte } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, sql } from 'drizzle-orm';
+import { wallets } from '../wallets/wallets.schema';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { TransferTransactionDto } from './dto/transfer-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
@@ -67,6 +68,27 @@ export class TransactionsService {
       .values(transactionsToInsert)
       .returning();
 
+    // Update wallet balance if a wallet is associated
+    if (baseDto.walletId) {
+      if (baseDto.type === 'INCOME') {
+        await this.db
+          .update(wallets)
+          .set({
+            balance: sql`${wallets.balance} + ${baseDto.amount}`,
+            updatedAt: new Date(),
+          })
+          .where(eq(wallets.id, baseDto.walletId));
+      } else if (baseDto.type === 'EXPENSE') {
+        await this.db
+          .update(wallets)
+          .set({
+            balance: sql`${wallets.balance} - ${baseDto.amount}`,
+            updatedAt: new Date(),
+          })
+          .where(eq(wallets.id, baseDto.walletId));
+      }
+    }
+
     return numInstallments > 1 ? inserted : inserted[0];
   }
 
@@ -113,6 +135,24 @@ export class TransactionsService {
         .update(transactions)
         .set({ linkedTransactionId: transferIn.id })
         .where(eq(transactions.id, transferOut.id));
+
+      // Decrease source wallet
+      await tx
+        .update(wallets)
+        .set({
+          balance: sql`${wallets.balance} - ${amount}`,
+          updatedAt: new Date(),
+        })
+        .where(eq(wallets.id, sourceWalletId));
+
+      // Increase destination wallet
+      await tx
+        .update(wallets)
+        .set({
+          balance: sql`${wallets.balance} + ${amount}`,
+          updatedAt: new Date(),
+        })
+        .where(eq(wallets.id, destinationWalletId));
 
       transferOut.linkedTransactionId = transferIn.id;
 
@@ -248,6 +288,43 @@ export class TransactionsService {
       .delete(transactions)
       .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
       .returning();
+
+    // Revert wallet balance if associated
+    if (transaction.walletId) {
+      if (transaction.type === 'INCOME') {
+        await this.db
+          .update(wallets)
+          .set({
+            balance: sql`${wallets.balance} - ${transaction.amount}`,
+            updatedAt: new Date(),
+          })
+          .where(eq(wallets.id, transaction.walletId));
+      } else if (transaction.type === 'EXPENSE') {
+        await this.db
+          .update(wallets)
+          .set({
+            balance: sql`${wallets.balance} + ${transaction.amount}`,
+            updatedAt: new Date(),
+          })
+          .where(eq(wallets.id, transaction.walletId));
+      } else if (transaction.type === 'TRANSFER_OUT') {
+        await this.db
+          .update(wallets)
+          .set({
+            balance: sql`${wallets.balance} + ${transaction.amount}`,
+            updatedAt: new Date(),
+          })
+          .where(eq(wallets.id, transaction.walletId));
+      } else if (transaction.type === 'TRANSFER_IN') {
+        await this.db
+          .update(wallets)
+          .set({
+            balance: sql`${wallets.balance} - ${transaction.amount}`,
+            updatedAt: new Date(),
+          })
+          .where(eq(wallets.id, transaction.walletId));
+      }
+    }
 
     if (transaction.linkedTransactionId) {
       await this.db
