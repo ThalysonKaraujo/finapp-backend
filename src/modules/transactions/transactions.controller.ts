@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -73,6 +74,7 @@ export class TransactionsController {
   }
 
   @Put(':id')
+  @Patch(':id')
   update(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
