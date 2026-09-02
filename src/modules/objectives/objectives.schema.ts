@@ -1,4 +1,4 @@
-import { integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { boolean, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 import { user } from '../../auth/auth.schema';
 
 export const objectives = pgTable('objectives', {
@@ -10,6 +10,7 @@ export const objectives = pgTable('objectives', {
   currentAmount: integer('current_amount').notNull().default(0),
   color: text('color').notNull(),
   deadline: timestamp('deadline'),
+  isCompleted: boolean('is_completed').notNull().default(false),
   userId: text('user_id')
     .notNull()
     .references(() => user.id, { onDelete: 'cascade' }),
