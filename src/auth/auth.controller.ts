@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Res, Req } from '@nestjs/common';
+import { Controller, Get, Query, Req, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
@@ -6,7 +6,11 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Get('verify')
-  async verifyEmail(@Query('token') token: string, @Req() req: any, @Res() res: any) {
+  async verifyEmail(
+    @Query('token') token: string,
+    @Req() req: any,
+    @Res() res: any,
+  ) {
     const success = await this.authService.verifyEmail(token, req.headers);
 
     if (success) {

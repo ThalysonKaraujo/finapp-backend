@@ -13,10 +13,10 @@ import { DatabaseModule } from './database/database.module';
 
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 
-import { CategoriesModule } from './modules/categories/categories.module';
 import { BudgetsModule } from './modules/budgets/budgets.module';
-import { ReportsModule } from './modules/reports/reports.module';
+import { CategoriesModule } from './modules/categories/categories.module';
 import { ObjectivesModule } from './modules/objectives/objectives.module';
+import { ReportsModule } from './modules/reports/reports.module';
 import { TransactionsModule } from './modules/transactions/transactions.module';
 import { WalletsModule } from './modules/wallets/wallets.module';
 

@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import request from 'supertest';
 import { eq } from 'drizzle-orm';
+import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../../app.module';
 import { user } from '../auth.schema';
@@ -42,7 +42,10 @@ describe('AuthModule (e2e)', () => {
     expect(response.body.user.name).toBe('Test E2E User');
 
     // Bypass email verification for following tests
-    await db.update(user).set({ emailVerified: true }).where(eq(user.email, randomEmail));
+    await db
+      .update(user)
+      .set({ emailVerified: true })
+      .where(eq(user.email, randomEmail));
   });
 
   it('/api/auth/sign-in/email (POST) - should login existing user and return session', async () => {
