@@ -5,9 +5,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { and, eq, sql } from 'drizzle-orm';
+import { budgets } from './budgets.schema';
 import { CreateBudgetDto } from './dto/create-budget.dto';
 import { UpdateBudgetDto } from './dto/update-budget.dto';
-import { budgets } from './budgets.schema';
 
 @Injectable()
 export class BudgetsService {
@@ -39,7 +39,9 @@ export class BudgetsService {
       );
 
     if (existing && existing.length > 0) {
-      throw new BadRequestException('A budget for this category already exists.');
+      throw new BadRequestException(
+        'A budget for this category already exists.',
+      );
     }
 
     const [budget] = await this.db

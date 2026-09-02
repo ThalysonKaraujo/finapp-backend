@@ -32,7 +32,10 @@ describe('ReportsModule (e2e)', () => {
       password,
     });
 
-    await db.update(user).set({ emailVerified: true }).where(eq(user.email, randomEmail));
+    await db
+      .update(user)
+      .set({ emailVerified: true })
+      .where(eq(user.email, randomEmail));
 
     const signInRes = await request(app.getHttpServer())
       .post('/api/auth/sign-in/email')
@@ -180,7 +183,9 @@ describe('ReportsModule (e2e)', () => {
       expect(Array.isArray(budgets)).toBe(true);
       expect(budgets.length).toBe(2);
 
-      const alimentacaoBudget = budgets.find((g: any) => g.name === 'Alimentação');
+      const alimentacaoBudget = budgets.find(
+        (g: any) => g.name === 'Alimentação',
+      );
       expect(alimentacaoBudget.percentage).toBe(30);
       expect(alimentacaoBudget.color).toBe('#FF0000');
     });

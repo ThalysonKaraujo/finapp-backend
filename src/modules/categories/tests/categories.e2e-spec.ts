@@ -39,7 +39,10 @@ describe('CategoriesModule (e2e)', () => {
       password,
     });
 
-    await db.update(user).set({ emailVerified: true }).where(eq(user.email, randomEmail));
+    await db
+      .update(user)
+      .set({ emailVerified: true })
+      .where(eq(user.email, randomEmail));
 
     const signInRes = await request(app.getHttpServer())
       .post('/api/auth/sign-in/email')
