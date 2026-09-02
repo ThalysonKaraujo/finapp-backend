@@ -45,6 +45,7 @@ export class CategoriesService {
       const defaultCategories = [
         { name: 'Alimentação', color: '#EF4444', icon: 'utensils', userId },
         { name: 'Contas', color: '#3B82F6', icon: 'receipt', userId },
+        { name: 'Assinaturas', color: '#EC4899', icon: 'repeat', userId },
         { name: 'Lazer', color: '#8B5CF6', icon: 'gamepad-2', userId },
         { name: 'Transporte', color: '#F59E0B', icon: 'car', userId },
         { name: 'Saúde', color: '#10B981', icon: 'heart-pulse', userId },
