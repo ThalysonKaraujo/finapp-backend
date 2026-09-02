@@ -220,14 +220,14 @@ describe('TransactionsService', () => {
 
       // Mock sequence for transaction cb
       mockQueryResult = [{ id: 'trans-out-1' }]; // mocked return for inserts
-      
+
       const result = await service.transfer('user-1', dto as any);
-      
+
       expect(mockDb.transaction).toHaveBeenCalled();
       // Since our transaction mock simply invokes the callback with mockDb:
       expect(mockDb.insert).toHaveBeenCalled();
       expect(mockDb.update).toHaveBeenCalled();
-      
+
       expect(result).toHaveProperty('transferOut');
       expect(result).toHaveProperty('transferIn');
     });
@@ -304,9 +304,11 @@ describe('TransactionsService', () => {
     });
 
     it('🟢 Happy Path: should also remove linked transaction if exists', async () => {
-      mockQueryResult = [{ id: 'txn-1', userId: 'user-1', linkedTransactionId: 'txn-2' }];
+      mockQueryResult = [
+        { id: 'txn-1', userId: 'user-1', linkedTransactionId: 'txn-2' },
+      ];
       await service.remove('txn-1', 'user-1');
-      
+
       // Called twice: once for the main transaction, once for the linked one
       expect(mockDb.delete).toHaveBeenCalledTimes(2);
     });

@@ -72,7 +72,9 @@ export class TransactionsService {
 
   async transfer(userId: string, dto: TransferTransactionDto) {
     if (dto.sourceWalletId === dto.destinationWalletId) {
-      throw new BadRequestException('Source and destination wallets must be different');
+      throw new BadRequestException(
+        'Source and destination wallets must be different',
+      );
     }
 
     const { amount, sourceWalletId, destinationWalletId, date, title } = dto;
@@ -250,7 +252,12 @@ export class TransactionsService {
     if (transaction.linkedTransactionId) {
       await this.db
         .delete(transactions)
-        .where(and(eq(transactions.id, transaction.linkedTransactionId), eq(transactions.userId, userId)));
+        .where(
+          and(
+            eq(transactions.id, transaction.linkedTransactionId),
+            eq(transactions.userId, userId),
+          ),
+        );
     }
 
     return removed;
