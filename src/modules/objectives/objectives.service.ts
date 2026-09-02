@@ -1,4 +1,9 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { and, eq } from 'drizzle-orm';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { CreateObjectiveDto } from './dto/create-objective.dto';
@@ -13,9 +18,14 @@ export class ObjectivesService {
   ) {}
 
   async create(createObjectiveDto: CreateObjectiveDto, userId: string) {
+    const { deadline, ...rest } = createObjectiveDto;
     const [newObj] = await this.db
       .insert(objectives)
-      .values({ ...createObjectiveDto, userId })
+      .values({
+        ...rest,
+        deadline: deadline ? new Date(deadline) : null,
+        userId,
+      })
       .returning();
 
     return newObj;
@@ -41,12 +51,26 @@ export class ObjectivesService {
     return obj;
   }
 
-  async update(id: string, userId: string, updateObjectiveDto: UpdateObjectiveDto) {
+  async update(
+    id: string,
+    userId: string,
+    updateObjectiveDto: UpdateObjectiveDto,
+  ) {
     await this.findOne(id, userId);
+
+    const { deadline, ...rest } = updateObjectiveDto;
+    const dataToSet: Record<string, unknown> = {
+      ...rest,
+      updatedAt: new Date(),
+    };
+
+    if (deadline !== undefined) {
+      dataToSet.deadline = deadline ? new Date(deadline) : null;
+    }
 
     const [updated] = await this.db
       .update(objectives)
-      .set(updateObjectiveDto)
+      .set(dataToSet)
       .where(and(eq(objectives.id, id), eq(objectives.userId, userId)))
       .returning();
 
@@ -71,7 +95,7 @@ export class ObjectivesService {
 
     const [updated] = await this.db
       .update(objectives)
-      .set({ currentAmount: newAmount })
+      .set({ currentAmount: newAmount, updatedAt: new Date() })
       .where(and(eq(objectives.id, id), eq(objectives.userId, userId)))
       .returning();
 
@@ -89,7 +113,7 @@ export class ObjectivesService {
 
     const [updated] = await this.db
       .update(objectives)
-      .set({ currentAmount: newAmount })
+      .set({ currentAmount: newAmount, updatedAt: new Date() })
       .where(and(eq(objectives.id, id), eq(objectives.userId, userId)))
       .returning();
 
