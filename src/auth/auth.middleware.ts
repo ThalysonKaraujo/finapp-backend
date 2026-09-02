@@ -18,7 +18,12 @@ export class AuthMiddleware implements NestMiddleware {
     const query = new URLSearchParams(req.query as any).toString();
     const basePath = req.originalUrl.split('?')[0];
     req.url = `${protocol}://${host}${basePath}${query ? `?${query}` : ''}`;
-    
+
+    // Ensure Origin header is present for native mobile clients
+    if (!req.headers.origin) {
+      req.headers.origin = `${protocol}://${host || 'localhost:3000'}`;
+    }
+
     const handler = toNodeHandler(auth);
     return handler(req, res);
   }
