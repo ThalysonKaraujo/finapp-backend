@@ -57,16 +57,22 @@ describe('ObjectivesService', () => {
   describe('deposit', () => {
     it('🔴 Sad Path: should throw NotFoundException if objective does not exist', async () => {
       mockQueryResult = [];
-      await expect(service.deposit('obj-1', 'user-1', { amount: 100 })).rejects.toThrow(NotFoundException);
+      await expect(
+        service.deposit('obj-1', 'user-1', { amount: 100 }),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('🟢 Happy Path: should add amount to currentAmount', async () => {
-      mockQueryResult = [{ id: 'obj-1', currentAmount: 500, targetAmount: 1000 }];
-      
+      mockQueryResult = [
+        { id: 'obj-1', currentAmount: 500, targetAmount: 1000 },
+      ];
+
       mockDb.update.mockReturnValueOnce({
         set: vi.fn().mockReturnThis(),
         where: vi.fn().mockReturnThis(),
-        returning: vi.fn().mockResolvedValue([{ id: 'obj-1', currentAmount: 600 }]),
+        returning: vi
+          .fn()
+          .mockResolvedValue([{ id: 'obj-1', currentAmount: 600 }]),
       });
 
       const result = await service.deposit('obj-1', 'user-1', { amount: 100 });
@@ -77,21 +83,31 @@ describe('ObjectivesService', () => {
   describe('withdraw', () => {
     it('🔴 Sad Path: should throw NotFoundException if objective does not exist', async () => {
       mockQueryResult = [];
-      await expect(service.withdraw('obj-1', 'user-1', { amount: 100 })).rejects.toThrow(NotFoundException);
+      await expect(
+        service.withdraw('obj-1', 'user-1', { amount: 100 }),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('🔴 Sad Path: should throw BadRequestException if withdrawing more than currentAmount', async () => {
-      mockQueryResult = [{ id: 'obj-1', currentAmount: 50, targetAmount: 1000 }];
-      await expect(service.withdraw('obj-1', 'user-1', { amount: 100 })).rejects.toThrow(BadRequestException);
+      mockQueryResult = [
+        { id: 'obj-1', currentAmount: 50, targetAmount: 1000 },
+      ];
+      await expect(
+        service.withdraw('obj-1', 'user-1', { amount: 100 }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('🟢 Happy Path: should subtract amount from currentAmount', async () => {
-      mockQueryResult = [{ id: 'obj-1', currentAmount: 500, targetAmount: 1000 }];
-      
+      mockQueryResult = [
+        { id: 'obj-1', currentAmount: 500, targetAmount: 1000 },
+      ];
+
       mockDb.update.mockReturnValueOnce({
         set: vi.fn().mockReturnThis(),
         where: vi.fn().mockReturnThis(),
-        returning: vi.fn().mockResolvedValue([{ id: 'obj-1', currentAmount: 400 }]),
+        returning: vi
+          .fn()
+          .mockResolvedValue([{ id: 'obj-1', currentAmount: 400 }]),
       });
 
       const result = await service.withdraw('obj-1', 'user-1', { amount: 100 });

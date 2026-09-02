@@ -1,4 +1,13 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthGuard } from '../../common/guards/auth.guard';
@@ -15,7 +24,10 @@ export class ObjectivesController {
   constructor(private readonly objectivesService: ObjectivesService) {}
 
   @Post()
-  create(@Body() createObjectiveDto: CreateObjectiveDto, @CurrentUser('id') userId: string) {
+  create(
+    @Body() createObjectiveDto: CreateObjectiveDto,
+    @CurrentUser('id') userId: string,
+  ) {
     return this.objectivesService.create(createObjectiveDto, userId);
   }
 
