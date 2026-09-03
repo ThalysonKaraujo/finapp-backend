@@ -45,7 +45,12 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: true,
   },
-  trustedOrigins: ['http://localhost:3000', 'exp://*', 'app://*'],
+  trustedOrigins: [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'exp://*',
+    'app://*',
+  ],
   rateLimit: {
     enabled: true,
     window: 10, // 10 seconds global window
